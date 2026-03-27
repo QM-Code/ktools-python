@@ -1,0 +1,3 @@
+/home/karmak/dev/ktools/ktools-python/kcli/demo/bootstrap/build/latest/CMakeFiles/kcli_python_demo_bootstrap.dir
+/home/karmak/dev/ktools/ktools-python/kcli/demo/bootstrap/build/latest/CMakeFiles/edit_cache.dir
+/home/karmak/dev/ktools/ktools-python/kcli/demo/bootstrap/build/latest/CMakeFiles/rebuild_cache.dir

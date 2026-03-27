@@ -1,0 +1,34 @@
+{
+  "project": {
+    "title": "Karma CLI Parsing SDK",
+    "id": "kcli"
+  },
+  "git": {
+    "url": "https://github.com/QM-Code/kcli-python",
+    "auth": "git@github.com:QM-Code/kcli-python.git"
+  },
+  "cmake": {
+    "minimum_version": "3.20",
+    "configure_by_default": true,
+    "tests": false,
+    "sdk": {
+      "package_name": "KcliSDK"
+    }
+  },
+  "build": {
+    "jobs": 4,
+    "type": "shared",
+    "demos": [
+      "bootstrap",
+      "exe/core",
+      "exe/omega"
+    ],
+    "defaults": {
+      "demos": [
+        "bootstrap",
+        "exe/core",
+        "exe/omega"
+      ]
+    }
+  }
+}

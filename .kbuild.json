@@ -1,0 +1,17 @@
+{
+  "project": {
+    "title": "Karma Tools Python Superproject",
+    "id": "ktools-python"
+  },
+  "git": {
+    "url": "https://github.com/QM-Code/ktools-python",
+    "auth": "git@github.com:QM-Code/ktools-python.git"
+  },
+  "batch": {
+    "repos": [
+      "kbuild",
+      "kcli",
+      "ktrace"
+    ]
+  }
+}

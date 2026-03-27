@@ -1,0 +1,3 @@
+/home/karmak/dev/ktools/ktools-python/ktrace/demo/exe/omega/build/latest/CMakeFiles/ktrace_python_demo_omega.dir
+/home/karmak/dev/ktools/ktools-python/ktrace/demo/exe/omega/build/latest/CMakeFiles/edit_cache.dir
+/home/karmak/dev/ktools/ktools-python/ktrace/demo/exe/omega/build/latest/CMakeFiles/rebuild_cache.dir
