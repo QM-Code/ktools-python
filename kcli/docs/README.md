@@ -6,3 +6,5 @@ Pages:
 
 - [index.md](index.md)
 - [api.md](api.md)
+- [behavior.md](behavior.md)
+- [examples.md](examples.md)

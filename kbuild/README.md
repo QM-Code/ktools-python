@@ -11,6 +11,12 @@ on your `PATH` as `kbuild` via a symlink such as:
 ln -s /path/to/kbuild/kbuild.py ~/.local/bin/kbuild
 ```
 
+Inside `ktools-python/`, use the local script directly:
+
+```bash
+./kbuild/kbuild.py --batch kcli ktrace --build-latest
+```
+
 ## Documentation
 
 - [Overview and quick start](docs/index.md)
@@ -24,23 +30,23 @@ ln -s /path/to/kbuild/kbuild.py ~/.local/bin/kbuild
 Bootstrapping a new repo from an empty directory:
 
 ```bash
-kbuild --kbuild-config
+./kbuild/kbuild.py --kbuild-config
 # edit ./.kbuild.json
-kbuild --kbuild-init
+./kbuild/kbuild.py --kbuild-init
 ```
 
 Normal day-to-day build commands:
 
 ```bash
-kbuild --build-latest
-kbuild --build-demos
-kbuild --clean-latest
+./kbuild/kbuild.py --build-latest
+./kbuild/kbuild.py --build-demos
+./kbuild/kbuild.py --clean-latest
 ```
 
 If the repo uses local `vcpkg`, prepare it first:
 
 ```bash
-kbuild --vcpkg-install
+./kbuild/kbuild.py --vcpkg-install
 ```
 
 ## What Kbuild Manages

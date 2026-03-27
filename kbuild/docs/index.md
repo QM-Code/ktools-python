@@ -22,18 +22,18 @@ CMake projects. It handles five related jobs:
 Fresh directory:
 
 ```bash
-kbuild --kbuild-config
+./kbuild/kbuild.py --kbuild-config
 # edit .kbuild.json
-kbuild --kbuild-init
-kbuild --vcpkg-install
+./kbuild/kbuild.py --kbuild-init
+./kbuild/kbuild.py --vcpkg-install
 ```
 
 Existing repo:
 
 ```bash
-kbuild --build-latest
-kbuild --build-demos
-kbuild --clean-latest
+./kbuild/kbuild.py --build-latest
+./kbuild/kbuild.py --build-demos
+./kbuild/kbuild.py --clean-latest
 ```
 
 ## Core Concepts
@@ -70,13 +70,13 @@ kbuild --clean-latest
 
 ## Which Command Should I Reach For?
 
-- Use `kbuild --build-latest` for the normal build path.
-- Use `kbuild --build-demos` when you want explicit demo validation.
-- Use `kbuild --cmake-no-configure` only when the target build directory
+- Use `./kbuild/kbuild.py --build-latest` for the normal build path.
+- Use `./kbuild/kbuild.py --build-demos` when you want explicit demo validation.
+- Use `./kbuild/kbuild.py --cmake-no-configure` only when the target build directory
   already contains `CMakeCache.txt`.
-- Use `kbuild --vcpkg-install` the first time a repo-local `vcpkg` project is
+- Use `./kbuild/kbuild.py --vcpkg-install` the first time a repo-local `vcpkg` project is
   prepared.
-- Use `kbuild --git-initialize` only once, after scaffold generation and remote
+- Use `./kbuild/kbuild.py --git-initialize` only once, after scaffold generation and remote
   creation.
 
 ## Working References

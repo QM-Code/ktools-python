@@ -9,6 +9,15 @@ Structure:
 - `exe/` executable integration demos
 - `tests/` subprocess-driven CLI checks for the Python demos
 
+Demo pages:
+
+- [bootstrap/README.md](bootstrap/README.md)
+- [sdk/alpha/README.md](sdk/alpha/README.md)
+- [sdk/beta/README.md](sdk/beta/README.md)
+- [sdk/gamma/README.md](sdk/gamma/README.md)
+- [exe/core/README.md](exe/core/README.md)
+- [exe/omega/README.md](exe/omega/README.md)
+
 Run examples from the repo root:
 
 ```bash

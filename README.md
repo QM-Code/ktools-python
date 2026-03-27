@@ -14,9 +14,27 @@ This workspace currently contains:
 
 ## Build Model
 
-Use the relevant child repo when building or testing a specific Python implementation.
+Use the workspace-local `kbuild` entry script from this directory:
 
-The shared build tool for the ecosystem is `kbuild`, exposed on `PATH`, though individual Python repos may also support direct Python-native test or execution flows.
+```bash
+./kbuild/kbuild.py --batch kcli ktrace --build-latest
+```
+
+Use the relevant child repo when testing a specific Python implementation.
+
+Typical child-repo test commands:
+
+```bash
+cd kcli
+python3 -m unittest discover -s tests
+python3 -m unittest discover -s demo/tests
+
+cd ../ktrace
+python3 -m unittest discover -s tests
+python3 -m unittest discover -s demo/tests
+```
+
+The Python workspace keeps its own local copy of `kbuild` under `kbuild/`.
 
 ## Where To Go Next
 
