@@ -9,7 +9,6 @@
   },
   "batch": {
     "repos": [
-      "kbuild",
       "kcli",
       "ktrace"
     ]

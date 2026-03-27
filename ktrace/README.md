@@ -14,14 +14,21 @@ It follows the same high-level model as the C++ implementation:
 
 - [Overview and quick start](docs/index.md)
 - [API guide](docs/api.md)
+- [Behavior guide](docs/behavior.md)
 - [Demo overview](demo/README.md)
 
 ## Build SDK
 
-Build from the `ktools-python/` workspace root with the local build tool:
+Build from the `ktools-python/` workspace root with the shared build tool:
 
 ```bash
-./kbuild/kbuild.py --batch ktrace --build-latest
+python3 ../kbuild/kbuild.py --batch ktrace --build-latest
+```
+
+If `kbuild` is already on your `PATH`, the equivalent command is:
+
+```bash
+kbuild --batch ktrace --build-latest
 ```
 
 SDK output:
@@ -81,6 +88,8 @@ logger.enableChannels("alpha.*")
 - `info()`, `warn()`, and `error()` are always visible once the trace source is attached to a `Logger`
 - selector matching supports local selectors, namespace-qualified selectors, `*`, and brace sets such as `*.{net,io}`
 - unmatched selectors produce warning output instead of raising
+- conflicting explicit channel-color merges are rejected when trace sources are attached to one `Logger`
+- invalid runtime channel queries return `False` rather than raising
 - `makeInlineParser()` exposes `--trace`, `--trace-examples`, `--trace-namespaces`, `--trace-channels`, `--trace-colors`, `--trace-files`, `--trace-functions`, and `--trace-timestamps`
 
 ## Demo Layout

@@ -71,7 +71,11 @@ class TraceLogger:
     def shouldTraceChannel(self, channel: str) -> bool:
         if self._attached_logger is None:
             return False
-        return self._attached_logger.shouldTraceChannel(self, f".{normalize_channel_or_throw(channel)}")
+        try:
+            qualified_channel = f".{normalize_channel_or_throw(channel)}"
+        except ValueError:
+            return False
+        return self._attached_logger.shouldTraceChannel(self, qualified_channel)
 
     def trace(self, channel: str, format_text: str, *args: object) -> None:
         if self._attached_logger is None:
@@ -150,7 +154,18 @@ class Logger:
         logger._attached_logger = self  # noqa: SLF001
         self._attached_loggers.append(logger)
         channels = self._registered_channels.setdefault(logger.getNamespace(), {})
-        channels.update(logger._channels)  # noqa: SLF001
+        for channel_name, color in logger._channels.items():  # noqa: SLF001
+            existing = channels.get(channel_name)
+            if existing is None or existing == color or color == "Default":
+                channels[channel_name] = existing or color
+                continue
+            if existing == "Default":
+                channels[channel_name] = color
+                continue
+            raise ValueError(
+                "conflicting explicit channel colors for "
+                f"'{logger.getNamespace()}.{channel_name}': '{existing}' vs '{color}'"
+            )
 
     def enableChannel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:
         if isinstance(channel_or_logger, TraceLogger):
@@ -167,10 +182,16 @@ class Logger:
         if isinstance(channel_or_logger, TraceLogger):
             if qualified_channel is None:
                 return False
-            qualified = self._resolve_channel_reference(qualified_channel, channel_or_logger.getNamespace())
+            try:
+                qualified = self._resolve_channel_reference(qualified_channel, channel_or_logger.getNamespace())
+            except ValueError:
+                return False
             return qualified in self._enabled_channels
 
-        qualified = self._resolve_channel_reference(channel_or_logger, "")
+        try:
+            qualified = self._resolve_channel_reference(channel_or_logger, "")
+        except ValueError:
+            return False
         return qualified in self._enabled_channels
 
     def disableChannel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:

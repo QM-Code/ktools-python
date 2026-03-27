@@ -82,6 +82,21 @@ class OmegaCliTests(unittest.TestCase):
             r"\[omega\] \[app\] \[main:[0-9]+:main\] cli processing enabled, use --trace for options",
         )
 
+    def test_functions_with_timestamps_option(self) -> None:
+        result = run_demo("--trace", ".app", "--trace-timestamps", "--trace-functions")
+        self.assertEqual(result.returncode, 0)
+        self.assertRegex(
+            result.stdout,
+            r"\[omega\] \[[0-9]+\.[0-9]{6}\] \[app\] \[main:[0-9]+:main\] cli processing enabled, use --trace for options",
+        )
+        self.assertNotIn("CLI error:", result.stdout)
+
+    def test_removed_lines_option_is_unknown(self) -> None:
+        result = run_demo("--trace", ".app", "--trace-lines")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("[error] [cli] unknown option --trace-lines", result.stderr)
+        self.assertNotIn("Trace selector examples:", result.stderr)
+
     def test_wildcard_all_depth3(self) -> None:
         result = run_demo("--trace", "*.*.*.*")
         self.assertEqual(result.returncode, 0)

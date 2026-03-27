@@ -8,16 +8,21 @@ It is the root entrypoint for Python implementations of the ktools libraries.
 
 This workspace currently contains:
 
-- `kbuild/`
 - `kcli/`
 - `ktrace/`
 
 ## Build Model
 
-Use the workspace-local `kbuild` entry script from this directory:
+Use the shared `kbuild` tool from this workspace checkout:
 
 ```bash
-./kbuild/kbuild.py --batch kcli ktrace --build-latest
+python3 ../kbuild/kbuild.py --batch kcli ktrace --build-latest
+```
+
+If `kbuild` is already on your `PATH`, the equivalent command is:
+
+```bash
+kbuild --batch kcli ktrace --build-latest
 ```
 
 Use the relevant child repo when testing a specific Python implementation.
@@ -34,14 +39,11 @@ python3 -m unittest discover -s tests
 python3 -m unittest discover -s demo/tests
 ```
 
-The Python workspace keeps its own local copy of `kbuild` under `kbuild/`.
-
 ## Where To Go Next
 
 For concrete Python API and implementation details, use the docs in the relevant child repo.
 
 Current implementation:
 
-- [kbuild](kbuild)
 - [kcli](kcli)
 - [ktrace](ktrace)

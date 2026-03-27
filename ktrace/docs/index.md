@@ -39,8 +39,12 @@ app_trace.info("service starting")
 - trace output is channel-gated
 - operational logs from `info()`, `warn()`, and `error()` are always visible
 - selectors support local forms such as `.app` and wildcard forms such as `*.*`
+- conflicting explicit channel-color merges are rejected when multiple trace
+  sources register the same qualified channel on one logger
+- invalid runtime channel queries return `False`
 - output formatting can include timestamps, filenames, line numbers, and
   function names
 - `makeInlineParser()` exposes the `--trace*` CLI surface through `kcli`
 
-For the Python public surface, see [api.md](api.md).
+For the Python public surface, see [api.md](api.md). For the concrete selector,
+merge, and formatting rules, see [behavior.md](behavior.md).

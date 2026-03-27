@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import sys
+import threading
 import unittest
 
 from pathlib import Path
@@ -20,6 +21,28 @@ import ktrace
 
 
 class KtraceTests(unittest.TestCase):
+    def test_explicit_enable_disable_semantics(self) -> None:
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("tests")
+        trace.addChannel("net")
+        trace.addChannel("cache")
+        logger.addTraceLogger(trace)
+
+        logger.enableChannels("tests.*")
+        self.assertTrue(logger.shouldTraceChannel("tests.net"))
+        self.assertTrue(logger.shouldTraceChannel("tests.cache"))
+
+        logger.disableChannels("tests.*")
+        self.assertFalse(logger.shouldTraceChannel("tests.net"))
+        self.assertFalse(logger.shouldTraceChannel("tests.cache"))
+
+        logger.enableChannel("tests.net")
+        self.assertTrue(logger.shouldTraceChannel("tests.net"))
+        self.assertFalse(logger.shouldTraceChannel("tests.cache"))
+
+        logger.disableChannel("tests.net")
+        self.assertFalse(logger.shouldTraceChannel("tests.net"))
+
     def test_trace_disabled_by_default(self) -> None:
         logger = ktrace.Logger()
         trace = ktrace.TraceLogger("alpha")
@@ -106,6 +129,100 @@ class KtraceTests(unittest.TestCase):
             trace.trace("app", "testing...")
 
         self.assertIn("[core] [app] testing...", stream.getvalue())
+
+    def test_invalid_runtime_channel_queries_return_false(self) -> None:
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("tests")
+        trace.addChannel("net")
+        logger.addTraceLogger(trace)
+        logger.enableChannels("tests.*")
+
+        self.assertFalse(logger.shouldTraceChannel("tests.bad name"))
+        self.assertFalse(trace.shouldTraceChannel("bad name"))
+
+    def test_conflicting_explicit_channel_colors_are_rejected(self) -> None:
+        logger = ktrace.Logger()
+
+        first = ktrace.TraceLogger("tests")
+        first.addChannel("net")
+        logger.addTraceLogger(first)
+
+        duplicate = ktrace.TraceLogger("tests")
+        duplicate.addChannel("net")
+        logger.addTraceLogger(duplicate)
+
+        explicit_color = ktrace.TraceLogger("tests")
+        explicit_color.addChannel("net", ktrace.Color("Gold3"))
+        logger.addTraceLogger(explicit_color)
+
+        conflicting = ktrace.TraceLogger("tests")
+        conflicting.addChannel("net", ktrace.Color("Orange3"))
+
+        with self.assertRaisesRegex(ValueError, "conflicting explicit channel colors"):
+            logger.addTraceLogger(conflicting)
+
+    def test_format_message_matches_public_contract(self) -> None:
+        self.assertEqual(ktrace._api.format_message("value {} {}", 7, "done"), "value 7 done")
+        self.assertEqual(ktrace._api.format_message("escaped {{}}"), "escaped {}")
+        self.assertEqual(ktrace._api.format_message("bool {}", True), "bool true")
+
+        for invalid_format in ("value {} {}", "value", "{", "}", "{:x}"):
+            with self.subTest(invalid_format=invalid_format):
+                with self.assertRaises(ValueError):
+                    ktrace._api.format_message(invalid_format, 7)
+
+    def test_public_log_output_respects_output_options(self) -> None:
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("tests")
+        logger.addTraceLogger(trace)
+        logger.setOutputOptions(
+            ktrace.OutputOptions(
+                filenames=True,
+                line_numbers=True,
+                function_names=False,
+                timestamps=False,
+            )
+        )
+
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            trace.info("info message")
+            trace.warn("warn value {}", 7)
+            trace.error("error message")
+
+        text = stream.getvalue()
+        self.assertTrue(text.startswith("[tests] [info] "))
+        self.assertIn("\n[tests] [warning] ", text)
+        self.assertIn("\n[tests] [error] ", text)
+        self.assertIn("info message", text)
+        self.assertIn("warn value 7", text)
+        self.assertIn("error message", text)
+        self.assertIn("test_ktrace:", text)
+        self.assertNotIn("[info] [tests] [info]", text)
+        self.assertNotIn("[warning] [tests] [warning]", text)
+        self.assertNotIn("[error] [tests] [error]", text)
+
+    def test_trace_changed_is_thread_safe_under_basic_contention(self) -> None:
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("tests")
+        trace.addChannel("changed")
+        logger.addTraceLogger(trace)
+        logger.enableChannel("tests.changed")
+
+        stream = io.StringIO()
+
+        def worker(thread_index: int) -> None:
+            for iteration in range(500):
+                trace.traceChanged("changed", f"{thread_index}:{iteration & 1}", "changed")
+
+        with contextlib.redirect_stdout(stream):
+            threads = [threading.Thread(target=worker, args=(index,)) for index in range(4)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+        self.assertTrue(stream.getvalue())
 
 
 if __name__ == "__main__":

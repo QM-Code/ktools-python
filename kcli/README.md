@@ -24,10 +24,16 @@ The Python implementation follows the same core model as the C++ SDK:
 
 ## Build And Test
 
-Build from the `ktools-python/` workspace root with the local build tool:
+Build from the `ktools-python/` workspace root with the shared build tool:
 
 ```bash
-./kbuild/kbuild.py --batch kcli --build-latest
+python3 ../kbuild/kbuild.py --batch kcli --build-latest
+```
+
+If `kbuild` is already on your `PATH`, the equivalent command is:
+
+```bash
+kbuild --batch kcli --build-latest
 ```
 
 From this repo root, run the Python tests directly:

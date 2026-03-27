@@ -30,7 +30,7 @@ def normalize_color_or_throw(color_name: str) -> str:
 
 def format_message(format_text: str, *args: object) -> str:
     text = str(format_text)
-    formatted_args = [str(arg) for arg in args]
+    formatted_args = [_stringify_argument(arg) for arg in args]
 
     out: list[str] = []
     arg_index = 0
@@ -68,3 +68,9 @@ def format_message(format_text: str, *args: object) -> str:
         raise ValueError("too many arguments for trace format string")
 
     return "".join(out)
+
+
+def _stringify_argument(value: object) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)

@@ -19,7 +19,6 @@ Cross-language conceptual definitions belong at the overview/spec level, not her
 
 This workspace currently contains:
 
-- `kbuild/`
 - `kcli/`
 - `ktrace/`
 
