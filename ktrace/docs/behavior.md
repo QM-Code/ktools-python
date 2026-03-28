@@ -8,6 +8,8 @@ This page collects the Python `ktrace` runtime rules that matter in practice.
 - `Logger` owns the executable-facing runtime registry, selector state, and
   final output
 - a `TraceLogger` may only be attached to one `Logger`
+- SDK-style modules commonly expose one shared trace source through a
+  module-level getter such as `get_trace_logger()`
 
 When multiple trace sources register the same qualified channel on one logger:
 
@@ -28,6 +30,9 @@ Supported forms include:
 
 Additional rules:
 
+- bare `*` is invalid; use a qualified selector such as `.*` or `*.*`
+- leading-dot selectors require a local namespace context
+- selector-list APIs accept CSV while preserving brace groups
 - empty selector lists are rejected
 - unmatched selectors emit warning output instead of raising
 - unregistered channels remain disabled even if a selector pattern would

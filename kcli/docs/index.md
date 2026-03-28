@@ -1,19 +1,21 @@
 # kcli Python
 
-`kcli` is a small Python library for building structured CLIs with explicit
-support for both ordinary options and namespaced inline roots.
+`kcli` is a compact Python library for executable startup and command-line
+parsing. It is intentionally opinionated about normal CLI behavior:
 
-## Core Model
+- parse first
+- fail early on invalid input
+- do not run handlers until the full command line validates
+- preserve the caller's `argv`
+- support grouped inline roots such as `--trace-*` and `--config-*`
 
-`kcli` exposes two main parser types:
+## Start Here
 
-- `Parser` for top-level options, aliases, and positional handling
-- `InlineParser` for a root such as `--build` and its `--build-*` options
+- [API guide](api.md)
+- [Parsing behavior](behavior.md)
+- [Examples](examples.md)
 
-Handlers are validated first and then executed only after the full command line
-parses cleanly.
-
-## Quick Start
+## Typical Flow
 
 ```python
 import kcli
@@ -31,20 +33,66 @@ parser = kcli.Parser()
 build = kcli.InlineParser("--build")
 
 build.setHandler("-profile", on_profile, "Set build profile.")
+
 parser.addInlineParser(build)
+parser.addAlias("-v", "--verbose")
 parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
 
 argv = ["tool", "--verbose", "--build-profile", "debug"]
 parser.parseOrExit(len(argv), argv)
 ```
 
-## Main Behaviors
+## Core Concepts
 
-- `parseOrExit()` prints `[error] [cli] ...` and exits with code `2`
-- `parseOrThrow()` raises `kcli.CliError`
-- bare inline roots such as `--build` print inline help by default
-- root value handlers can claim bare-root values such as `--trace '.*'`
-- required values may consume a first token that begins with `-`
-- aliases can prepend preset value tokens
+`Parser`
 
-For the Python public surface, see [api.md](api.md).
+- owns top-level handlers, aliases, inline parser registrations, and the single
+  parse pass
+
+`InlineParser`
+
+- defines one inline root namespace such as `--alpha`, `--trace`, or `--build`
+
+`HandlerContext`
+
+- exposes the effective option, command, root, and value tokens seen by the
+  handler after alias expansion
+
+`CliError`
+
+- used by `parseOrThrow()` to surface invalid CLI input and handler failures
+
+## Which Entry Point Should I Use?
+
+Use `parseOrExit()` when:
+
+- you are in a normal executable startup path
+- invalid CLI input should print a standardized error and exit with code `2`
+- you do not need custom formatting or recovery
+
+Use `parseOrThrow()` when:
+
+- you want to customize error formatting
+- you want custom exit codes
+- you want to intercept and test parse failures directly
+
+## Build And Explore
+
+```bash
+python3 ../kbuild/kbuild.py --batch kcli --build-latest
+python3 demo/exe/core/main.py --alpha-message "hello"
+python3 demo/exe/omega/main.py --build
+python3 -m unittest discover -s tests
+```
+
+## Working References
+
+If you want complete runnable examples, start with:
+
+- [`../demo/bootstrap/main.py`](../demo/bootstrap/main.py)
+- [`../demo/sdk/alpha.py`](../demo/sdk/alpha.py)
+- [`../demo/exe/core/main.py`](../demo/exe/core/main.py)
+- [`../demo/exe/omega/main.py`](../demo/exe/omega/main.py)
+- [`../tests/test_kcli.py`](../tests/test_kcli.py)
+
+The public API contract lives in [`../src/kcli`](../src/kcli).

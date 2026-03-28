@@ -3,14 +3,21 @@ from __future__ import annotations
 import re
 
 from dataclasses import dataclass
+from enum import Enum
 
 
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
+class SegmentPatternKind(Enum):
+    WILDCARD = "wildcard"
+    SET = "set"
+    EXACT = "exact"
+
+
 @dataclass(frozen=True)
 class _SegmentPattern:
-    kind: str
+    kind: SegmentPatternKind
     values: tuple[str, ...]
 
 
@@ -80,7 +87,7 @@ def _parse_segment_or_throw(segment: str) -> _SegmentPattern:
     if not token:
         raise ValueError("Invalid trace selector: empty selector segment")
     if token == "*":
-        return _SegmentPattern("wildcard", ())
+        return _SegmentPattern(SegmentPatternKind.WILDCARD, ())
     if token.startswith("{") or token.endswith("}"):
         if not (token.startswith("{") and token.endswith("}")):
             raise ValueError(f"Invalid trace selector: '{segment}'")
@@ -88,8 +95,8 @@ def _parse_segment_or_throw(segment: str) -> _SegmentPattern:
         if not inner:
             raise ValueError(f"Invalid trace selector: '{segment}'")
         values = tuple(validate_identifier_or_throw(item.strip(), "selector") for item in inner.split(","))
-        return _SegmentPattern("set", values)
-    return _SegmentPattern("exact", (validate_identifier_or_throw(token, "selector"),))
+        return _SegmentPattern(SegmentPatternKind.SET, values)
+    return _SegmentPattern(SegmentPatternKind.EXACT, (validate_identifier_or_throw(token, "selector"),))
 
 
 def parse_selector_or_throw(raw_selector: str, local_namespace: str = "") -> SelectorPattern:
@@ -119,12 +126,12 @@ def matches_selector(pattern: SelectorPattern, qualified_channel: str) -> bool:
 
     for index, segment in enumerate(pattern.segments):
         if index >= len(candidate):
-            return all(trailing.kind == "wildcard" for trailing in pattern.segments[index:])
+            return all(trailing.kind is SegmentPatternKind.WILDCARD for trailing in pattern.segments[index:])
 
         value = candidate[index]
-        if segment.kind == "wildcard":
+        if segment.kind is SegmentPatternKind.WILDCARD:
             continue
-        if segment.kind == "set":
+        if segment.kind is SegmentPatternKind.SET:
             if value not in segment.values:
                 return False
             continue

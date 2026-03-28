@@ -228,148 +228,235 @@ def build_parse_tokens(argc: int, argv: Sequence[str]) -> list[str]:
     return ["" if argv[index] is None else str(argv[index]) for index in range(argc)]
 
 
-def execute_invocations(invocations: Sequence[_Invocation], result: _ParseOutcome) -> None:
-    for invocation in invocations:
-        if not result.ok:
-            return
-        if invocation.kind is _InvocationKind.PRINT_HELP:
-            print_help(invocation)
-            continue
-        context = HandlerContext(
-            root=invocation.root,
-            option=invocation.option,
-            command=invocation.command,
-            value_tokens=list(invocation.value_tokens),
+class _ParseSession:
+    def __init__(self, data: _ParserData, argc: int, argv: Sequence[str]) -> None:
+        self._data = data
+        self._argc = argc
+        self._tokens = build_parse_tokens(argc, argv)
+        self._consumed = [False] * argc
+        self._invocations: list[_Invocation] = []
+        self._result = _ParseOutcome()
+
+    def run(self) -> None:
+        self._scan_tokens()
+        if self._result.ok:
+            self._schedule_positionals()
+        if self._result.ok:
+            self._report_unknown_options()
+        if self._result.ok:
+            self._execute_invocations()
+        if not self._result.ok:
+            throw_cli_error(self._result)
+
+    def _scan_tokens(self) -> None:
+        index = 1
+        while index < self._argc:
+            if self._consumed[index]:
+                index += 1
+                continue
+
+            arg = self._tokens[index]
+            if not arg:
+                index += 1
+                continue
+
+            alias_binding: _AliasBinding | None = None
+            effective_arg = arg
+            if arg[0] == "-" and not starts_with(arg, "--"):
+                alias_binding = find_alias_binding(self._data, arg)
+                if alias_binding is not None:
+                    effective_arg = alias_binding.target_token
+
+            if effective_arg[0] != "-":
+                index += 1
+                continue
+            if effective_arg == "--":
+                index += 1
+                continue
+            if starts_with(effective_arg, "--"):
+                index = self._handle_double_dash_option(index, effective_arg, alias_binding)
+
+            if not self._result.ok:
+                return
+            index += 1
+
+    def _handle_double_dash_option(
+        self,
+        index: int,
+        effective_arg: str,
+        alias_binding: _AliasBinding | None,
+    ) -> int:
+        inline_match = match_inline_token(self._data, effective_arg)
+        if inline_match.kind is _InlineTokenKind.BARE_ROOT:
+            return self._handle_bare_inline_root(index, effective_arg, inline_match.parser, alias_binding)
+
+        if inline_match.kind is _InlineTokenKind.DASH_OPTION:
+            binding = find_command(inline_match.parser.commands, inline_match.suffix)
+            if inline_match.suffix and binding is not None:
+                return self._schedule_invocation(
+                    binding,
+                    alias_binding,
+                    inline_match.parser.root_name,
+                    inline_match.suffix,
+                    effective_arg,
+                    index,
+                )
+            return index
+
+        command = effective_arg[2:]
+        binding = find_command(self._data.commands, command)
+        if binding is None:
+            return index
+        return self._schedule_invocation(
+            binding,
+            alias_binding,
+            "",
+            command,
+            effective_arg,
+            index,
         )
-        try:
-            if invocation.kind is _InvocationKind.FLAG:
-                assert invocation.flag_handler is not None
-                invocation.flag_handler(context)
-            elif invocation.kind is _InvocationKind.VALUE:
-                assert invocation.value_handler is not None
-                invocation.value_handler(context, join_with_spaces(invocation.value_tokens))
-            elif invocation.kind is _InvocationKind.POSITIONAL:
-                assert invocation.positional_handler is not None
-                invocation.positional_handler(context)
-        except Exception as exc:
-            report_error(result, invocation.option, format_option_error_message(invocation.option, str(exc)))
-        except BaseException:
-            report_error(
-                result,
-                invocation.option,
-                format_option_error_message(
-                    invocation.option,
-                    "unknown exception while handling option",
-                ),
+
+    def _handle_bare_inline_root(
+        self,
+        index: int,
+        option_token: str,
+        parser: _InlineParserData,
+        alias_binding: _AliasBinding | None,
+    ) -> int:
+        consume_index(self._consumed, index)
+        collected = collect_value_tokens(index, self._tokens, self._consumed, False)
+        if not collected.has_value and not has_alias_preset_tokens(alias_binding):
+            self._invocations.append(
+                _Invocation(
+                    kind=_InvocationKind.PRINT_HELP,
+                    root=parser.root_name,
+                    help_rows=build_help_rows(parser),
+                )
             )
+            return index
+
+        if parser.root_value_handler is None:
+            report_error(self._result, option_token, f"unknown value for option '{option_token}'")
+            return index
+
+        self._invocations.append(
+            _Invocation(
+                kind=_InvocationKind.VALUE,
+                root=parser.root_name,
+                option=option_token,
+                value_handler=parser.root_value_handler,
+                value_tokens=build_effective_value_tokens(alias_binding, collected.parts),
+            )
+        )
+        if collected.has_value:
+            return collected.last_index
+        return index
+
+    def _schedule_invocation(
+        self,
+        binding: _CommandBinding,
+        alias_binding: _AliasBinding | None,
+        root: str,
+        command: str,
+        option_token: str,
+        index: int,
+    ) -> int:
+        consume_index(self._consumed, index)
+        invocation = _Invocation(root=root, option=option_token, command=command)
+        if not binding.expects_value:
+            if has_alias_preset_tokens(alias_binding):
+                report_error(
+                    self._result,
+                    alias_binding.alias,
+                    f"alias '{alias_binding.alias}' presets values for option '{option_token}' "
+                    f"which does not accept values",
+                )
+                return index
+            invocation.kind = _InvocationKind.FLAG
+            invocation.flag_handler = binding.flag_handler
+            self._invocations.append(invocation)
+            return index
+
+        collected = collect_value_tokens(
+            index,
+            self._tokens,
+            self._consumed,
+            binding.value_arity is ValueArity.REQUIRED,
+        )
+        if (
+            not collected.has_value
+            and not has_alias_preset_tokens(alias_binding)
+            and binding.value_arity is ValueArity.REQUIRED
+        ):
+            report_error(self._result, option_token, f"option '{option_token}' requires a value")
+            return index
+
+        if collected.has_value:
+            index = collected.last_index
+        invocation.kind = _InvocationKind.VALUE
+        invocation.value_handler = binding.value_handler
+        invocation.value_tokens = build_effective_value_tokens(alias_binding, collected.parts)
+        self._invocations.append(invocation)
+        return index
+
+    def _schedule_positionals(self) -> None:
+        schedule_positionals(self._data, self._tokens, self._consumed, self._invocations)
+
+    def _report_unknown_options(self) -> None:
+        for index in range(1, self._argc):
+            if self._consumed[index]:
+                continue
+            token = self._tokens[index]
+            if token and token[0] == "-":
+                report_error(self._result, token, f"unknown option {token}")
+                return
+
+    def _execute_invocations(self) -> None:
+        for invocation in self._invocations:
+            if not self._result.ok:
+                return
+            if invocation.kind is _InvocationKind.PRINT_HELP:
+                print_help(invocation)
+                continue
+
+            context = HandlerContext(
+                root=invocation.root,
+                option=invocation.option,
+                command=invocation.command,
+                value_tokens=list(invocation.value_tokens),
+            )
+            try:
+                if invocation.kind is _InvocationKind.FLAG:
+                    assert invocation.flag_handler is not None
+                    invocation.flag_handler(context)
+                elif invocation.kind is _InvocationKind.VALUE:
+                    assert invocation.value_handler is not None
+                    invocation.value_handler(context, join_with_spaces(invocation.value_tokens))
+                elif invocation.kind is _InvocationKind.POSITIONAL:
+                    assert invocation.positional_handler is not None
+                    invocation.positional_handler(context)
+            except Exception as exc:
+                report_error(
+                    self._result,
+                    invocation.option,
+                    format_option_error_message(invocation.option, str(exc)),
+                )
+            except BaseException:
+                report_error(
+                    self._result,
+                    invocation.option,
+                    format_option_error_message(
+                        invocation.option,
+                        "unknown exception while handling option",
+                    ),
+                )
 
 
 def parse(data: _ParserData, argc: int, argv: Sequence[str] | None) -> None:
-    result = _ParseOutcome()
     if argc > 0 and argv is None:
         throw_cli_error(make_error("", "kcli received invalid argv (argc > 0 but argv is null)"))
     if argc <= 0 or argv is None:
         return
     if len(argv) < argc:
         throw_cli_error(make_error("", "kcli received invalid argv (argv shorter than argc)"))
-    consumed = [False] * argc
-    invocations: list[_Invocation] = []
-    tokens = build_parse_tokens(argc, argv)
-
-    index = 1
-    while index < argc:
-        if consumed[index]:
-            index += 1
-            continue
-        arg = tokens[index]
-        if not arg:
-            index += 1
-            continue
-        alias_binding: _AliasBinding | None = None
-        effective_arg = arg
-        if arg[0] == "-" and not starts_with(arg, "--"):
-            alias_binding = find_alias_binding(data, arg)
-            if alias_binding is not None:
-                effective_arg = alias_binding.target_token
-        if effective_arg[0] != "-":
-            index += 1
-            continue
-        if effective_arg == "--":
-            index += 1
-            continue
-        if starts_with(effective_arg, "--"):
-            inline_match = match_inline_token(data, effective_arg)
-            if inline_match.kind is _InlineTokenKind.BARE_ROOT:
-                consume_index(consumed, index)
-                collected = collect_value_tokens(index, tokens, consumed, False)
-                if not collected.has_value and not has_alias_preset_tokens(alias_binding):
-                    invocations.append(
-                        _Invocation(
-                            kind=_InvocationKind.PRINT_HELP,
-                            root=inline_match.parser.root_name,
-                            help_rows=build_help_rows(inline_match.parser),
-                        )
-                    )
-                elif inline_match.parser.root_value_handler is None:
-                    report_error(result, effective_arg, f"unknown value for option '{effective_arg}'")
-                else:
-                    invocations.append(
-                        _Invocation(
-                            kind=_InvocationKind.VALUE,
-                            root=inline_match.parser.root_name,
-                            option=effective_arg,
-                            value_handler=inline_match.parser.root_value_handler,
-                            value_tokens=build_effective_value_tokens(alias_binding, collected.parts),
-                        )
-                    )
-                    if collected.has_value:
-                        index = collected.last_index
-            elif inline_match.kind is _InlineTokenKind.DASH_OPTION:
-                binding = find_command(inline_match.parser.commands, inline_match.suffix)
-                if inline_match.suffix and binding is not None:
-                    index = schedule_invocation(
-                        binding,
-                        alias_binding,
-                        inline_match.parser.root_name,
-                        inline_match.suffix,
-                        effective_arg,
-                        index,
-                        tokens,
-                        consumed,
-                        invocations,
-                        result,
-                    )
-            else:
-                command = effective_arg[2:]
-                binding = find_command(data.commands, command)
-                if binding is not None:
-                    index = schedule_invocation(
-                        binding,
-                        alias_binding,
-                        "",
-                        command,
-                        effective_arg,
-                        index,
-                        tokens,
-                        consumed,
-                        invocations,
-                        result,
-                    )
-        if not result.ok:
-            break
-        index += 1
-
-    if result.ok:
-        schedule_positionals(data, tokens, consumed, invocations)
-    if result.ok:
-        for scan in range(1, argc):
-            if consumed[scan]:
-                continue
-            token = tokens[scan]
-            if token and token[0] == "-":
-                report_error(result, token, f"unknown option {token}")
-                break
-    if result.ok:
-        execute_invocations(invocations, result)
-    if not result.ok:
-        throw_cli_error(result)
+    _ParseSession(data, argc, argv).run()

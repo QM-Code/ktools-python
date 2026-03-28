@@ -144,7 +144,6 @@ class Logger:
         self._output_options = OutputOptions()
         self._registered_channels: dict[str, dict[str, str]] = {}
         self._enabled_channels: set[str] = set()
-        self._attached_loggers: list[TraceLogger] = []
         self._output_lock = threading.Lock()
 
     def addTraceLogger(self, logger: TraceLogger) -> None:
@@ -152,7 +151,6 @@ class Logger:
             raise ValueError("trace logger is already attached to another logger")
 
         logger._attached_logger = self  # noqa: SLF001
-        self._attached_loggers.append(logger)
         channels = self._registered_channels.setdefault(logger.getNamespace(), {})
         for channel_name, color in logger._channels.items():  # noqa: SLF001
             existing = channels.get(channel_name)
@@ -229,86 +227,26 @@ class Logger:
         return sorted(self._registered_channels.get(namespace, {}))
 
     def makeInlineParser(self, local_trace_logger: TraceLogger, trace_root: str = "trace") -> Any:
-        import kcli
+        return _TraceCliBuilder(self, local_trace_logger, trace_root).build()
 
-        local_namespace = local_trace_logger.getNamespace()
-
-        def on_root(context: Any, value: str) -> None:
-            self.enableChannels(value, local_namespace)
-
-        def on_examples(context: Any) -> None:
-            option_root = f"--{context.root}"
-            print("")
-            print("General trace selector pattern:")
-            print(f"  {option_root} <namespace>.<channel>[.<subchannel>[.<subchannel>]]")
-            print("")
-            print("Trace selector examples:")
-            print(f"  {option_root} '.abc'")
-            print(f"  {option_root} '.abc.xyz'")
-            print(f"  {option_root} 'otherapp.channel'")
-            print(f"  {option_root} '*.*'")
-            print(f"  {option_root} '*.*.*'")
-            print(f"  {option_root} '*.*.*.*'")
-            print(f"  {option_root} '*.{ '{net,io}' }'")
-            print("")
-
-        def on_namespaces(context: Any) -> None:
-            namespaces = self.getNamespaces()
-            if not namespaces:
-                print("No trace namespaces defined.\n")
-                return
-            print("\nAvailable trace namespaces:")
-            for trace_namespace in namespaces:
-                print(f"  {trace_namespace}")
-            print("")
-
-        def on_channels(context: Any) -> None:
-            printed_any = False
-            for trace_namespace in self.getNamespaces():
-                for channel in self.getChannels(trace_namespace):
-                    if not printed_any:
-                        print("\nAvailable trace channels:")
-                        printed_any = True
-                    print(f"  {trace_namespace}.{channel}")
-            if not printed_any:
-                print("No trace channels defined.\n")
-                return
-            print("")
-
-        def on_colors(context: Any) -> None:
-            print("\nAvailable trace colors:")
-            for color_name in COLOR_NAMES:
-                print(f"  {color_name}")
-            print("")
-
-        def on_files(context: Any) -> None:
-            options = self.getOutputOptions()
-            options.filenames = True
-            options.line_numbers = True
-            self.setOutputOptions(options)
-
-        def on_functions(context: Any) -> None:
-            options = self.getOutputOptions()
-            options.filenames = True
-            options.line_numbers = True
-            options.function_names = True
-            self.setOutputOptions(options)
-
-        def on_timestamps(context: Any) -> None:
-            options = self.getOutputOptions()
-            options.timestamps = True
-            self.setOutputOptions(options)
-
-        parser = kcli.InlineParser(trace_root)
-        parser.setRootValueHandler(on_root, "<channels>", "Trace selected channels.")
-        parser.setHandler("-examples", on_examples, "Show selector examples.")
-        parser.setHandler("-namespaces", on_namespaces, "Show initialized trace namespaces.")
-        parser.setHandler("-channels", on_channels, "Show initialized trace channels.")
-        parser.setHandler("-colors", on_colors, "Show available trace colors.")
-        parser.setHandler("-files", on_files, "Include source file and line in trace output.")
-        parser.setHandler("-functions", on_functions, "Include function names in trace output.")
-        parser.setHandler("-timestamps", on_timestamps, "Include timestamps in trace output.")
-        return parser
+    def _update_output_options(
+        self,
+        *,
+        filenames: bool | None = None,
+        line_numbers: bool | None = None,
+        function_names: bool | None = None,
+        timestamps: bool | None = None,
+    ) -> None:
+        options = self.getOutputOptions()
+        if filenames is not None:
+            options.filenames = filenames
+        if line_numbers is not None:
+            options.line_numbers = line_numbers
+        if function_names is not None:
+            options.function_names = function_names
+        if timestamps is not None:
+            options.timestamps = timestamps
+        self.setOutputOptions(options)
 
     def _apply_selectors(self, selectors_csv: str, local_namespace: str, *, enable: bool) -> None:
         selector_text = str(selectors_csv).strip()
@@ -398,3 +336,85 @@ class Logger:
     def _write_line(self, prefix: str, message: str) -> None:
         with self._output_lock:
             print(f"{prefix} {message}", flush=True)
+
+
+class _TraceCliBuilder:
+    def __init__(self, logger: Logger, local_trace_logger: TraceLogger, trace_root: str) -> None:
+        self._logger = logger
+        self._local_namespace = local_trace_logger.getNamespace()
+        self._trace_root = trace_root
+
+    def build(self) -> Any:
+        import kcli
+
+        parser = kcli.InlineParser(self._trace_root)
+        parser.setRootValueHandler(self._on_root, "<channels>", "Trace selected channels.")
+        parser.setHandler("-examples", self._on_examples, "Show selector examples.")
+        parser.setHandler("-namespaces", self._on_namespaces, "Show initialized trace namespaces.")
+        parser.setHandler("-channels", self._on_channels, "Show initialized trace channels.")
+        parser.setHandler("-colors", self._on_colors, "Show available trace colors.")
+        parser.setHandler("-files", self._on_files, "Include source file and line in trace output.")
+        parser.setHandler("-functions", self._on_functions, "Include function names in trace output.")
+        parser.setHandler("-timestamps", self._on_timestamps, "Include timestamps in trace output.")
+        return parser
+
+    def _on_root(self, context: Any, value: str) -> None:
+        self._logger.enableChannels(value, self._local_namespace)
+
+    def _on_examples(self, context: Any) -> None:
+        option_root = f"--{context.root}"
+        print("")
+        print("General trace selector pattern:")
+        print(f"  {option_root} <namespace>.<channel>[.<subchannel>[.<subchannel>]]")
+        print("")
+        print("Trace selector examples:")
+        print(f"  {option_root} '.abc'")
+        print(f"  {option_root} '.abc.xyz'")
+        print(f"  {option_root} 'otherapp.channel'")
+        print(f"  {option_root} '*.*'")
+        print(f"  {option_root} '*.*.*'")
+        print(f"  {option_root} '*.*.*.*'")
+        print(f"  {option_root} '*.{{net,io}}'")
+        print("")
+
+    def _on_namespaces(self, context: Any) -> None:
+        namespaces = self._logger.getNamespaces()
+        if not namespaces:
+            print("No trace namespaces defined.\n")
+            return
+        print("\nAvailable trace namespaces:")
+        for trace_namespace in namespaces:
+            print(f"  {trace_namespace}")
+        print("")
+
+    def _on_channels(self, context: Any) -> None:
+        printed_any = False
+        for trace_namespace in self._logger.getNamespaces():
+            for channel in self._logger.getChannels(trace_namespace):
+                if not printed_any:
+                    print("\nAvailable trace channels:")
+                    printed_any = True
+                print(f"  {trace_namespace}.{channel}")
+        if not printed_any:
+            print("No trace channels defined.\n")
+            return
+        print("")
+
+    def _on_colors(self, context: Any) -> None:
+        print("\nAvailable trace colors:")
+        for color_name in COLOR_NAMES:
+            print(f"  {color_name}")
+        print("")
+
+    def _on_files(self, context: Any) -> None:
+        self._logger._update_output_options(filenames=True, line_numbers=True)  # noqa: SLF001
+
+    def _on_functions(self, context: Any) -> None:
+        self._logger._update_output_options(  # noqa: SLF001
+            filenames=True,
+            line_numbers=True,
+            function_names=True,
+        )
+
+    def _on_timestamps(self, context: Any) -> None:
+        self._logger._update_output_options(timestamps=True)  # noqa: SLF001

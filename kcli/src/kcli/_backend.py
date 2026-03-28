@@ -64,6 +64,19 @@ def upsert_command(
     commands.append((command, binding))
 
 
+def register_command(
+    commands: list[tuple[str, _CommandBinding]],
+    command: str,
+    handler: FlagHandler | ValueHandler,
+    description: str,
+    value_arity: ValueArity | None,
+) -> None:
+    if value_arity is None:
+        upsert_command(commands, command, make_flag_binding(handler, description))
+        return
+    upsert_command(commands, command, make_value_binding(handler, description, value_arity))
+
+
 def set_inline_root(data: _InlineParserData, root: str) -> None:
     data.root_name = normalize_inline_root_option_or_throw(root)
 
@@ -94,7 +107,7 @@ def set_inline_handler_flag(
     description: str,
 ) -> None:
     command = normalize_inline_handler_option_or_throw(option, data.root_name)
-    upsert_command(data.commands, command, make_flag_binding(handler, description))
+    register_command(data.commands, command, handler, description, None)
 
 
 def set_inline_handler_value(
@@ -104,7 +117,7 @@ def set_inline_handler_value(
     description: str,
 ) -> None:
     command = normalize_inline_handler_option_or_throw(option, data.root_name)
-    upsert_command(data.commands, command, make_value_binding(handler, description, ValueArity.REQUIRED))
+    register_command(data.commands, command, handler, description, ValueArity.REQUIRED)
 
 
 def set_inline_optional_value_handler(
@@ -114,7 +127,7 @@ def set_inline_optional_value_handler(
     description: str,
 ) -> None:
     command = normalize_inline_handler_option_or_throw(option, data.root_name)
-    upsert_command(data.commands, command, make_value_binding(handler, description, ValueArity.OPTIONAL))
+    register_command(data.commands, command, handler, description, ValueArity.OPTIONAL)
 
 
 def set_alias(
@@ -145,7 +158,7 @@ def set_primary_handler_flag(
     description: str,
 ) -> None:
     command = normalize_primary_handler_option_or_throw(option)
-    upsert_command(data.commands, command, make_flag_binding(handler, description))
+    register_command(data.commands, command, handler, description, None)
 
 
 def set_primary_handler_value(
@@ -155,7 +168,7 @@ def set_primary_handler_value(
     description: str,
 ) -> None:
     command = normalize_primary_handler_option_or_throw(option)
-    upsert_command(data.commands, command, make_value_binding(handler, description, ValueArity.REQUIRED))
+    register_command(data.commands, command, handler, description, ValueArity.REQUIRED)
 
 
 def set_primary_optional_value_handler(
@@ -165,7 +178,7 @@ def set_primary_optional_value_handler(
     description: str,
 ) -> None:
     command = normalize_primary_handler_option_or_throw(option)
-    upsert_command(data.commands, command, make_value_binding(handler, description, ValueArity.OPTIONAL))
+    register_command(data.commands, command, handler, description, ValueArity.OPTIONAL)
 
 
 def set_positional_handler(data: _ParserData, handler: PositionalHandler) -> None:

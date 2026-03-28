@@ -74,6 +74,24 @@ trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
 trace.addChannel("cache", ktrace.Color("Gold3"))
 ```
 
+SDK-style Python modules will usually expose one shared trace source through a
+module-level helper:
+
+```python
+_TRACE_LOGGER: ktrace.TraceLogger | None = None
+
+
+def get_trace_logger() -> ktrace.TraceLogger:
+    global _TRACE_LOGGER
+    if _TRACE_LOGGER is not None:
+        return _TRACE_LOGGER
+
+    trace = ktrace.TraceLogger("alpha")
+    trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
+    _TRACE_LOGGER = trace
+    return _TRACE_LOGGER
+```
+
 `Logger` owns the runtime registry, selector state, and formatting:
 
 ```python
@@ -86,7 +104,10 @@ logger.enableChannels("alpha.*")
 
 - trace output is channel-gated and disabled by default
 - `info()`, `warn()`, and `error()` are always visible once the trace source is attached to a `Logger`
-- selector matching supports local selectors, namespace-qualified selectors, `*`, and brace sets such as `*.{net,io}`
+- selector matching supports local selectors, namespace-qualified selectors,
+  wildcard segments inside qualified selectors such as `*.*`, and brace sets
+  such as `*.{net,io}`
+- bare `*` is rejected; use a qualified selector such as `.*` or `*.*`
 - unmatched selectors produce warning output instead of raising
 - conflicting explicit channel-color merges are rejected when trace sources are attached to one `Logger`
 - invalid runtime channel queries return `False` rather than raising

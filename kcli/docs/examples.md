@@ -1,8 +1,15 @@
 # Examples
 
-This page collects complete Python usage examples for the public `kcli` API.
+This page shows common Python `kcli` patterns. For complete runnable examples,
+also see:
 
-## Top-Level Options
+- [`../demo/sdk/alpha.py`](../demo/sdk/alpha.py)
+- [`../demo/sdk/beta.py`](../demo/sdk/beta.py)
+- [`../demo/sdk/gamma.py`](../demo/sdk/gamma.py)
+- [`../demo/exe/core/main.py`](../demo/exe/core/main.py)
+- [`../demo/exe/omega/main.py`](../demo/exe/omega/main.py)
+
+## Minimal Executable
 
 ```python
 import kcli
@@ -12,17 +19,12 @@ def on_verbose(context: kcli.HandlerContext) -> None:
     print(f"Processing {context.option}")
 
 
-def on_output(context: kcli.HandlerContext, value: str) -> None:
-    print(f'Processing {context.option} with value "{value}"')
-
-
 parser = kcli.Parser()
 parser.addAlias("-v", "--verbose")
 parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
-parser.setHandler("--output", on_output, "Set output target.")
 ```
 
-## Inline Root With Value And Optional Value
+## Inline Root With Required And Optional Values
 
 ```python
 import kcli
@@ -44,8 +46,9 @@ parser = kcli.Parser()
 parser.addInlineParser(build)
 ```
 
-The following forms are accepted:
+This enables:
 
+- `--build`
 - `--build-profile debug`
 - `--build-enable`
 - `--build-enable auto`
@@ -62,24 +65,77 @@ def on_selector(context: kcli.HandlerContext, value: str) -> None:
 
 trace = kcli.InlineParser("--trace")
 trace.setRootValueHandler(on_selector, "<channels>", "Trace selected channels.")
-
-parser = kcli.Parser()
-parser.addInlineParser(trace)
 ```
 
-This supports:
+This enables:
 
 - `--trace`
 - `--trace '.app'`
 - `--trace '*.{net,io}'`
 
-When `--trace` is used without a value, inline help is printed.
+Behavior:
 
-## Working References
+- `--trace` prints inline help
+- `--trace '.app'` invokes `on_selector`
 
-If you want complete runnable examples, start with:
+## Alias Preset Tokens
 
-- `demo/bootstrap/main.py`
-- `demo/sdk/alpha.py`
-- `demo/exe/core/main.py`
-- `demo/exe/omega/main.py`
+```python
+import kcli
+
+
+def on_config_load(context: kcli.HandlerContext, value: str) -> None:
+    print(context.option)
+    print(context.value_tokens)
+    print(value)
+
+
+parser = kcli.Parser()
+parser.addAlias("-c", "--config-load", ["user-file"])
+parser.setHandler("--config-load", on_config_load, "Load config.")
+```
+
+This makes:
+
+- `-c settings.json`
+
+behave like:
+
+- `--config-load user-file settings.json`
+
+Inside the handler:
+
+- `context.option` is `--config-load`
+- `context.value_tokens` is `["user-file", "settings.json"]`
+
+## Positionals
+
+```python
+def on_positionals(context: kcli.HandlerContext) -> None:
+    for token in context.value_tokens:
+        use_positional(token)
+
+
+parser.setPositionalHandler(on_positionals)
+```
+
+The positional handler receives all remaining non-option tokens after option
+parsing succeeds.
+
+## Custom Error Handling
+
+If you want your own formatting or exit policy, use `parseOrThrow()`:
+
+```python
+try:
+    parser.parseOrThrow(len(argv), argv)
+except kcli.CliError as exc:
+    print(f"custom cli error: {exc}")
+    raise SystemExit(2)
+```
+
+Use this when:
+
+- you want custom error text
+- you want custom logging
+- you want a different exit code policy

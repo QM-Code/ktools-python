@@ -84,6 +84,24 @@ logger.addTraceLogger(app_trace)
 
 A `TraceLogger` may only be attached to one `Logger`.
 
+SDK-style modules will usually expose a shared trace source through a
+module-level getter:
+
+```python
+_TRACE_LOGGER: ktrace.TraceLogger | None = None
+
+
+def get_trace_logger() -> ktrace.TraceLogger:
+    global _TRACE_LOGGER
+    if _TRACE_LOGGER is not None:
+        return _TRACE_LOGGER
+
+    trace = ktrace.TraceLogger("alpha")
+    trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
+    _TRACE_LOGGER = trace
+    return _TRACE_LOGGER
+```
+
 ### Channel Enablement
 
 ```python
@@ -97,10 +115,15 @@ Selector forms supported by the current Python implementation include:
 
 - `.channel` for a local channel in the provided local namespace
 - `namespace.channel`
-- `*` per segment, such as `*.*` or `alpha.*.*`
+- wildcard segments inside a qualified selector, such as `*.*` or `alpha.*.*`
 - brace sets per segment, such as `*.{net,io}` or `{alpha,beta}.*`
 
-Unmatched selectors produce a warning log rather than raising.
+Additional rules:
+
+- bare `*` is invalid; use a qualified selector such as `.*` or `*.*`
+- leading-dot selectors require a local namespace context
+- `enableChannels(...)` and `disableChannels(...)` accept CSV selector lists
+- unmatched selectors produce a warning log rather than raising
 
 ### Querying State
 
