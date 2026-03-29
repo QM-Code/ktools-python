@@ -29,3 +29,14 @@ This workspace currently contains:
 3. Use the root workspace only for Python-workspace-wide concerns such as root docs or cross-repo coordination.
 4. Read the relevant child repo `AGENTS.md` and `README.md` files before changing code in that repo.
 5. Use `kbuild` from `PATH` when the operator expects shared build tooling; otherwise follow the local implementation's documented Python flow.
+
+## Git Sync
+
+Use the shared `kbuild` workflow for commit/push sync from this workspace root:
+
+```bash
+kbuild --git-sync "<message>"
+```
+
+Treat that as the standard sync command unless a more local doc explicitly
+overrides it.
