@@ -31,12 +31,12 @@ Typical child-repo test commands:
 
 ```bash
 cd kcli
-python3 -m unittest discover -s tests
-python3 -m unittest discover -s demo/tests
+python3 -B -m unittest discover -s tests
+python3 -B -m unittest discover -s demo/tests
 
 cd ../ktrace
-python3 -m unittest discover -s tests
-python3 -m unittest discover -s demo/tests
+python3 -B -m unittest discover -s tests
+python3 -B -m unittest discover -s demo/tests
 ```
 
 ## Where To Go Next

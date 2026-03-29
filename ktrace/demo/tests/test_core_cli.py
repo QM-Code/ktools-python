@@ -13,7 +13,7 @@ CORE_DEMO = REPO_ROOT / "demo" / "exe" / "core" / "main.py"
 
 def run_demo(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(CORE_DEMO), *args],
+        [sys.executable, "-B", str(CORE_DEMO), *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

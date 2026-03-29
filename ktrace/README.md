@@ -39,27 +39,27 @@ SDK output:
 ## Build And Test Demos
 
 ```bash
-python3 -m unittest discover -s tests
-python3 -m unittest discover -s demo/tests
+python3 -B -m unittest discover -s tests
+python3 -B -m unittest discover -s demo/tests
 ```
 
 Demo entrypoints from this repo root:
 
 ```bash
-python3 demo/bootstrap/main.py --trace '.*'
-python3 demo/exe/core/main.py --trace '*.*'
-python3 demo/exe/omega/main.py --trace '*.{net,io}'
+python3 -B demo/bootstrap/main.py --trace '.*'
+python3 -B demo/exe/core/main.py --trace '*.*'
+python3 -B demo/exe/omega/main.py --trace '*.{net,io}'
 ```
 
 Trace CLI examples:
 
 ```bash
-python3 demo/exe/core/main.py --trace '.*'
-python3 demo/exe/omega/main.py --trace '*.*'
-python3 demo/exe/omega/main.py --trace '*.{net,io}'
-python3 demo/exe/omega/main.py --trace-namespaces
-python3 demo/exe/omega/main.py --trace-channels
-python3 demo/exe/omega/main.py --trace-colors
+python3 -B demo/exe/core/main.py --trace '.*'
+python3 -B demo/exe/omega/main.py --trace '*.*'
+python3 -B demo/exe/omega/main.py --trace '*.{net,io}'
+python3 -B demo/exe/omega/main.py --trace-namespaces
+python3 -B demo/exe/omega/main.py --trace-channels
+python3 -B demo/exe/omega/main.py --trace-colors
 ```
 
 ## API Model

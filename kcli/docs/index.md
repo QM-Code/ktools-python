@@ -80,9 +80,9 @@ Use `parseOrThrow()` when:
 
 ```bash
 python3 ../kbuild/kbuild.py --batch kcli --build-latest
-python3 demo/exe/core/main.py --alpha-message "hello"
-python3 demo/exe/omega/main.py --build
-python3 -m unittest discover -s tests
+python3 -B demo/exe/core/main.py --alpha-message "hello"
+python3 -B demo/exe/omega/main.py --build
+python3 -B -m unittest discover -s tests
 ```
 
 ## Working References

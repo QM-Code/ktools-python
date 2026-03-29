@@ -43,17 +43,17 @@ kbuild --batch kcli --build-latest
 From this repo root, run the Python tests directly:
 
 ```bash
-python3 -m unittest discover -s tests
-python3 -m unittest discover -s demo/tests
+python3 -B -m unittest discover -s tests
+python3 -B -m unittest discover -s demo/tests
 ```
 
 Demo entrypoints from this repo root:
 
 ```bash
-python3 demo/bootstrap/main.py --verbose
-python3 demo/exe/core/main.py --alpha-message hello
-python3 demo/exe/omega/main.py --newgamma-tag prod
-python3 demo/exe/omega/main.py --build
+python3 -B demo/bootstrap/main.py --verbose
+python3 -B demo/exe/core/main.py --alpha-message hello
+python3 -B demo/exe/omega/main.py --newgamma-tag prod
+python3 -B demo/exe/omega/main.py --build
 ```
 
 ## Behavior Highlights

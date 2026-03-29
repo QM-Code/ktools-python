@@ -31,15 +31,15 @@ When familiarizing yourself with this repo, read:
 ## Build And Test Expectations
 
 - Prefer the shared `kbuild` workflow from the workspace root for builds
-- Use direct `python3 -m unittest` runs from this repo root for fast feedback
+- Use direct `python3 -B -m unittest` runs from this repo root for fast feedback
 - Treat demos under `demo/` as part of the contract, not disposable examples
 
 Useful commands:
 
 ```bash
 python3 ../kbuild/kbuild.py --batch ktrace --build-latest
-python3 -m unittest discover -s tests
-python3 -m unittest discover -s demo/tests
+python3 -B -m unittest discover -s tests
+python3 -B -m unittest discover -s demo/tests
 ```
 
 ## Guidance For Agents

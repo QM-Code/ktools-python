@@ -21,8 +21,8 @@ Demo pages:
 Run examples from the repo root:
 
 ```bash
-python3 demo/bootstrap/main.py --verbose
-python3 demo/exe/core/main.py --alpha-message hello
-python3 demo/exe/omega/main.py --newgamma-tag prod
-python3 -m unittest discover -s demo/tests
+python3 -B demo/bootstrap/main.py --verbose
+python3 -B demo/exe/core/main.py --alpha-message hello
+python3 -B demo/exe/omega/main.py --newgamma-tag prod
+python3 -B -m unittest discover -s demo/tests
 ```
