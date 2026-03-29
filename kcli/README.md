@@ -30,6 +30,10 @@ Build from the `ktools-python/` workspace root with the shared build tool:
 python3 ../kbuild/kbuild.py --batch kcli --build-latest
 ```
 
+The CMake files in this repo exist only to let `kbuild` stage the Python
+package and demo entrypoints into the shared SDK/demo layout. Parser behavior
+lives in `src/`, `tests/`, and `demo/`; keep the CMake layer thin.
+
 If `kbuild` is already on your `PATH`, the equivalent command is:
 
 ```bash

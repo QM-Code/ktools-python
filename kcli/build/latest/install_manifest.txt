@@ -1,8 +1,0 @@
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_api.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_core.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_normalize.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_model.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/__init__.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_backend.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/python/kcli/_process.py
-/home/karmak/dev/ktools/ktools-python/kcli/build/latest/sdk/lib/cmake/KcliSDK/KcliSDKConfig.cmake
