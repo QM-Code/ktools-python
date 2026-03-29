@@ -1,7 +1,7 @@
 {
   "project": {
     "title": "Karma Tools Python Superproject",
-    "id": "ktools-python"
+    "id": "ktools_python"
   },
   "git": {
     "url": "https://github.com/QM-Code/ktools-python",

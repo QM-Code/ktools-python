@@ -18,9 +18,23 @@ DEMO_ROOT = _find_demo_root()
 if str(DEMO_ROOT) not in sys.path:
     sys.path.insert(0, str(DEMO_ROOT))
 
-from sdk.common import ensure_repo_paths
+def _ensure_repo_paths(current_file: str) -> None:
+    file_path = Path(current_file).resolve()
+    repo_root: Path | None = None
+    for parent in file_path.parents:
+        if (parent / "src").is_dir() and (parent / "demo").is_dir():
+            repo_root = parent
+            break
+    if repo_root is None:
+        raise RuntimeError("unable to locate repository root for core demo")
 
-ensure_repo_paths(__file__)
+    src_root = repo_root / "src"
+    path = str(src_root)
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+
+_ensure_repo_paths(__file__)
 
 import kcli
 
