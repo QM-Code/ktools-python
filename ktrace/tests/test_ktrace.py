@@ -130,6 +130,78 @@ class KtraceTests(unittest.TestCase):
 
         self.assertIn("[core] [app] testing...", stream.getvalue())
 
+    def test_make_inline_parser_honors_custom_root(self) -> None:
+        import kcli
+
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("core")
+        trace.addChannel("app")
+        logger.addTraceLogger(trace)
+
+        parser = kcli.Parser()
+        parser.addInlineParser(logger.makeInlineParser(trace, "debug"))
+        parser.parseOrExit(3, ["prog", "--debug", ".app"])
+
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            trace.trace("app", "testing...")
+
+        self.assertIn("[core] [app] testing...", stream.getvalue())
+
+    def test_make_inline_parser_examples_match_contract(self) -> None:
+        import kcli
+
+        logger = ktrace.Logger()
+        trace = ktrace.TraceLogger("core")
+        trace.addChannel("app")
+        logger.addTraceLogger(trace)
+
+        parser = kcli.Parser()
+        parser.addInlineParser(logger.makeInlineParser(trace))
+
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            parser.parseOrExit(2, ["prog", "--trace-examples"])
+
+        text = stream.getvalue()
+        self.assertIn("General trace selector pattern:", text)
+        self.assertIn("--trace '*.scheduler.tick'", text)
+        self.assertIn("--trace '{alpha,beta}.*'", text)
+        self.assertIn("--trace beta.{io,scheduler}.packet", text)
+        self.assertIn("--trace '{alpha,beta}.net'", text)
+
+    def test_make_inline_parser_lists_namespaces_channels_and_colors(self) -> None:
+        import kcli
+
+        logger = ktrace.Logger()
+        alpha = ktrace.TraceLogger("alpha")
+        alpha.addChannel("net")
+        beta = ktrace.TraceLogger("beta")
+        beta.addChannel("io", ktrace.Color("MediumSpringGreen"))
+        logger.addTraceLogger(alpha)
+        logger.addTraceLogger(beta)
+
+        parser = kcli.Parser()
+        parser.addInlineParser(logger.makeInlineParser(alpha))
+
+        namespace_stream = io.StringIO()
+        with contextlib.redirect_stdout(namespace_stream):
+            parser.parseOrExit(2, ["prog", "--trace-namespaces"])
+        self.assertIn("  alpha", namespace_stream.getvalue())
+        self.assertIn("  beta", namespace_stream.getvalue())
+
+        channel_stream = io.StringIO()
+        with contextlib.redirect_stdout(channel_stream):
+            parser.parseOrExit(2, ["prog", "--trace-channels"])
+        self.assertIn("  alpha.net", channel_stream.getvalue())
+        self.assertIn("  beta.io", channel_stream.getvalue())
+
+        color_stream = io.StringIO()
+        with contextlib.redirect_stdout(color_stream):
+            parser.parseOrExit(2, ["prog", "--trace-colors"])
+        self.assertIn("  DeepSkyBlue1", color_stream.getvalue())
+        self.assertIn("  MediumSpringGreen", color_stream.getvalue())
+
     def test_invalid_runtime_channel_queries_return_false(self) -> None:
         logger = ktrace.Logger()
         trace = ktrace.TraceLogger("tests")
@@ -160,6 +232,36 @@ class KtraceTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "conflicting explicit channel colors"):
             logger.addTraceLogger(conflicting)
+
+    def test_trace_logger_cannot_attach_to_multiple_loggers(self) -> None:
+        first = ktrace.Logger()
+        second = ktrace.Logger()
+        trace = ktrace.TraceLogger("tests")
+        trace.addChannel("net")
+
+        first.addTraceLogger(trace)
+
+        with self.assertRaisesRegex(ValueError, "already attached to another logger"):
+            second.addTraceLogger(trace)
+
+    def test_explicit_color_can_replace_default_color_registration(self) -> None:
+        logger = ktrace.Logger()
+
+        default_trace = ktrace.TraceLogger("tests")
+        default_trace.addChannel("net")
+        logger.addTraceLogger(default_trace)
+
+        explicit_trace = ktrace.TraceLogger("tests")
+        explicit_trace.addChannel("net", ktrace.Color("Gold3"))
+        logger.addTraceLogger(explicit_trace)
+
+        logger.enableChannel("tests.net")
+
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            explicit_trace.trace("net", "testing...")
+
+        self.assertIn("[tests] [net] testing...", stream.getvalue())
 
     def test_format_message_matches_public_contract(self) -> None:
         self.assertEqual(ktrace._api.format_message("value {} {}", 7, "done"), "value 7 done")

@@ -1,5 +1,0 @@
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/CMakeFiles/edit_cache.dir
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/CMakeFiles/rebuild_cache.dir
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/CMakeFiles/list_install_components.dir
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/CMakeFiles/install.dir
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/CMakeFiles/install/local.dir

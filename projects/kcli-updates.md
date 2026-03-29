@@ -2,9 +2,8 @@
 
 ## Mission
 
-Bring `ktools-python/kcli/` up to the C++ reference standard while preserving
-the current Python package shape and the underscore-based private module
-boundary.
+Keep `ktools-python/kcli/` readable, parity-checked, and clearly Pythonic while
+preserving the current public package surface and private-module boundary.
 
 ## Required Reading
 
@@ -19,46 +18,45 @@ boundary.
 
 ## Current Gaps
 
-- The package split is sensible, but `kcli/src/kcli/_process.py` is too large.
-- Test coverage is concentrated in `kcli/tests/test_kcli.py`.
-- Tracked build output exists in `kcli/build/latest` and demo build trees.
-- The repo contains CMake-related packaging/build files that should be reviewed
-  to make sure they support, rather than obscure, the Python implementation.
+- The CMake/kbuild staging layer still needs discipline so it supports the
+  Python package rather than obscuring it.
+- `demo/tests/` does not currently include a bootstrap CLI test.
+- The `_process`, `_process_plan`, `_process_values`, and `_process_help`
+  split should be kept explicit and coherent as the implementation evolves.
+- The implementation still needs a deliberate parity audit against the full C++
+  contract and demo behavior.
 
 ## Work Plan
 
-1. Refactor the largest modules.
-- Split `_process.py` along coherent boundaries such as token collection,
-  invocation planning, and help rendering if that improves readability.
-- Keep `_api.py`, `_normalize.py`, and `_model.py` focused on their current
-  responsibilities.
+1. Review the build/staging layer.
+- Keep only the packaging/build files that are genuinely required for shared
+  SDK/demo staging.
+- Document their role clearly so the real implementation remains obviously in
+  `src/`, `tests/`, and `demo/`.
 
-2. Break up the tests.
-- Replace the single large `tests/test_kcli.py` file with smaller test modules
-  grouped by API behavior, parsing rules, aliases, inline roots, and error
-  semantics.
-- Preserve the existing breadth of coverage.
-- Keep `demo/tests/` as separate end-to-end validation.
+2. Fill demo-coverage gaps.
+- Add a bootstrap demo CLI test so the demo suite covers bootstrap, core, and
+  omega behavior consistently.
+- Add any other focused demo checks that still depend on manual review.
 
-3. Review build and packaging structure.
-- Keep only the packaging/build files that are genuinely needed.
-- Remove tracked generated output from `build/latest` and demo build trees.
-- If CMake-based staging is still required, document its role clearly so it does
-  not look like accidental baggage.
+3. Continue the parity audit.
+- Verify alias preset tokens, inline-root help, required values beginning with
+  `-`, double-dash rejection, error formatting, and
+  validation-before-handler execution against the C++ docs/tests.
+- Add direct tests where behavior is currently covered only indirectly.
 
-4. Audit behavior parity with C++.
-- Match documented semantics for alias preset tokens, inline-root help, required
-  values that begin with `-`, error formatting, and validation-before-handler
-  execution.
-- Add direct tests when behavior is presently covered only by demos.
+4. Keep parser internals well-bounded.
+- Maintain a clear division between planning, value collection, help rendering,
+  and top-level parse coordination.
+- Avoid letting one `_process*` module absorb too many responsibilities again.
 
-5. Keep demos useful and readable.
-- Preserve the current bootstrap/sdk/exe role split.
-- Make demo modules easy for other language agents to compare with their own.
+5. Keep repo hygiene tight.
+- Preserve the current ignore rules for build output and caches.
+- Make sure test/demo cache noise does not drift into version control.
 
 ## Constraints
 
-- Preserve the current public package API exported from `src/kcli/__init__.py`.
+- Preserve the public package API exported from `src/kcli/__init__.py`.
 - Keep private implementation details private unless exposure is necessary.
 - Avoid introducing framework-heavy packaging patterns.
 
@@ -71,6 +69,7 @@ boundary.
 
 ## Done When
 
-- The parser implementation is split into readable modules.
-- Unit tests are organized by behavior instead of by accumulation.
-- Packaging/build mechanics no longer distract from the actual Python library.
+- The build/staging layer is clearly subordinate to the Python implementation.
+- Demo coverage includes the bootstrap path.
+- The Python repo is easy to compare with the C++ contract without digging
+  through packaging noise.

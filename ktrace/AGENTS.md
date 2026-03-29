@@ -48,3 +48,5 @@ python3 -m unittest discover -s demo/tests
 2. Favor parity with the C++ selector, merge, formatting, and demo contracts when Python behavior is underspecified.
 3. Keep logging/output changes deliberate; demos and downstream libraries rely on operator-facing trace behavior.
 4. Surface issues or recommendations when you find them.
+5. After a coherent batch of changes in `ktools-python/ktrace/`, return to the
+   `ktools-python/` workspace root and run `kbuild --git-sync "<message>"`.

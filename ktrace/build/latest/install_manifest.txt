@@ -1,5 +1,0 @@
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/sdk/python/ktrace/_api.py
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/sdk/python/ktrace/_selectors.py
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/sdk/python/ktrace/__init__.py
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/sdk/python/ktrace/_format.py
-/home/karmak/dev/ktools/ktools-python/ktrace/build/latest/sdk/lib/cmake/KtraceSDK/KtraceSDKConfig.cmake

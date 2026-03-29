@@ -48,3 +48,5 @@ python3 -m unittest discover -s demo/tests
 2. Keep public API changes deliberate; downstream repos such as `ktrace` depend on this package shape.
 3. Prefer aligning behavior with the C++ docs/tests when the Python contract is underspecified.
 4. Surface issues or recommendations when you find them.
+5. After a coherent batch of changes in `ktools-python/kcli/`, return to the
+   `ktools-python/` workspace root and run `kbuild --git-sync "<message>"`.

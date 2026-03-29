@@ -1,8 +1,25 @@
 from __future__ import annotations
 
-from .common import ensure_workspace_paths
+import sys
 
-ensure_workspace_paths(__file__)
+from pathlib import Path
+
+
+def _configure_demo_imports() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    workspace_root = repo_root.parent
+
+    for path in (
+        repo_root / "src",
+        repo_root / "demo",
+        workspace_root / "kcli" / "src",
+    ):
+        text = str(path)
+        if text not in sys.path:
+            sys.path.insert(0, text)
+
+
+_configure_demo_imports()
 
 import ktrace
 

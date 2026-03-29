@@ -40,3 +40,5 @@ kbuild --git-sync "<message>"
 
 Treat that as the standard sync command unless a more local doc explicitly
 overrides it.
+After a coherent batch of changes in this workspace or one of its child repos,
+return to `ktools-python/` and run that sync command promptly.

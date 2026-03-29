@@ -7,21 +7,21 @@ import sys
 from pathlib import Path
 
 
-def _find_demo_root() -> Path:
-    file_path = Path(__file__).resolve()
-    for parent in file_path.parents:
-        if (parent / "sdk").is_dir() and (parent / "tests").is_dir():
-            return parent
-    raise RuntimeError("unable to locate demo root")
+def _configure_demo_imports() -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    workspace_root = repo_root.parent
+
+    for path in (
+        repo_root / "src",
+        repo_root / "demo",
+        workspace_root / "kcli" / "src",
+    ):
+        text = str(path)
+        if text not in sys.path:
+            sys.path.insert(0, text)
 
 
-DEMO_ROOT = _find_demo_root()
-if str(DEMO_ROOT) not in sys.path:
-    sys.path.insert(0, str(DEMO_ROOT))
-
-from sdk.common import ensure_workspace_paths
-
-ensure_workspace_paths(__file__)
+_configure_demo_imports()
 
 import kcli
 import ktrace
