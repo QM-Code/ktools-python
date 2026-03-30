@@ -32,14 +32,14 @@ def on_profile(context: kcli.HandlerContext, value: str) -> None:
 parser = kcli.Parser()
 build = kcli.InlineParser("--build")
 
-build.setHandler("-profile", on_profile, "Set build profile.")
+build.set_handler("-profile", on_profile, "Set build profile.")
 
-parser.addInlineParser(build)
-parser.addAlias("-v", "--verbose")
-parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
+parser.add_inline_parser(build)
+parser.add_alias("-v", "--verbose")
+parser.set_handler("--verbose", on_verbose, "Enable verbose logging.")
 
 argv = ["tool", "--verbose", "--build-profile", "debug"]
-parser.parseOrExit(len(argv), argv)
+parser.parse_or_exit(argv)
 ```
 
 ## Core Concepts
@@ -60,17 +60,17 @@ parser.parseOrExit(len(argv), argv)
 
 `CliError`
 
-- used by `parseOrThrow()` to surface invalid CLI input and handler failures
+- used by `parse()` to surface invalid CLI input and handler failures
 
 ## Which Entry Point Should I Use?
 
-Use `parseOrExit()` when:
+Use `parse_or_exit()` when:
 
 - you are in a normal executable startup path
 - invalid CLI input should print a standardized error and exit with code `2`
 - you do not need custom formatting or recovery
 
-Use `parseOrThrow()` when:
+Use `parse()` when:
 
 - you want to customize error formatting
 - you want custom exit codes

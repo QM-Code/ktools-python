@@ -33,8 +33,8 @@ def get_trace_logger() -> ktrace.TraceLogger:
         return _TRACE_LOGGER
 
     trace = ktrace.TraceLogger("gamma")
-    trace.addChannel("physics", ktrace.Color("MediumOrchid1"))
-    trace.addChannel("metrics", ktrace.Color("LightSkyBlue1"))
+    trace.add_channel("physics", ktrace.color("MediumOrchid1"))
+    trace.add_channel("metrics", ktrace.color("LightSkyBlue1"))
     _TRACE_LOGGER = trace
     return _TRACE_LOGGER
 

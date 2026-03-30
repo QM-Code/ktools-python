@@ -33,8 +33,7 @@ class _Location:
     line: int
     function: str
 
-
-def Color(color_name: str) -> str:
+def color(color_name: str) -> str:
     return normalize_color_or_throw(color_name)
 
 
@@ -61,21 +60,22 @@ class TraceLogger:
         self._changed_lock = threading.Lock()
         self._changed_keys: dict[tuple[str, str, int, str], str] = {}
 
-    def addChannel(self, channel: str, color: str = "Default") -> None:
+    def add_channel(self, channel: str, color: str = "Default") -> None:
         channel_name = normalize_channel_or_throw(channel)
         self._channels[channel_name] = normalize_color_or_throw(color)
 
-    def getNamespace(self) -> str:
+    @property
+    def namespace(self) -> str:
         return self._namespace
 
-    def shouldTraceChannel(self, channel: str) -> bool:
+    def is_channel_enabled(self, channel: str) -> bool:
         if self._attached_logger is None:
             return False
         try:
             qualified_channel = f".{normalize_channel_or_throw(channel)}"
         except ValueError:
             return False
-        return self._attached_logger.shouldTraceChannel(self, qualified_channel)
+        return self._attached_logger.is_channel_enabled(self, qualified_channel)
 
     def trace(self, channel: str, format_text: str, *args: object) -> None:
         if self._attached_logger is None:
@@ -88,7 +88,7 @@ class TraceLogger:
             _caller_location(),
         )
 
-    def traceChanged(self, channel: str, key_expr: object, format_text: str, *args: object) -> None:
+    def trace_changed(self, channel: str, key_expr: object, format_text: str, *args: object) -> None:
         if self._attached_logger is None:
             return
         channel_name = normalize_channel_or_throw(channel)
@@ -146,12 +146,12 @@ class Logger:
         self._enabled_channels: set[str] = set()
         self._output_lock = threading.Lock()
 
-    def addTraceLogger(self, logger: TraceLogger) -> None:
+    def add_trace_logger(self, logger: TraceLogger) -> None:
         if logger._attached_logger is not None and logger._attached_logger is not self:  # noqa: SLF001
             raise ValueError("trace logger is already attached to another logger")
 
         logger._attached_logger = self  # noqa: SLF001
-        channels = self._registered_channels.setdefault(logger.getNamespace(), {})
+        channels = self._registered_channels.setdefault(logger.namespace, {})
         for channel_name, color in logger._channels.items():  # noqa: SLF001
             existing = channels.get(channel_name)
             if existing is None or existing == color or color == "Default":
@@ -162,26 +162,30 @@ class Logger:
                 continue
             raise ValueError(
                 "conflicting explicit channel colors for "
-                f"'{logger.getNamespace()}.{channel_name}': '{existing}' vs '{color}'"
+                f"'{logger.namespace}.{channel_name}': '{existing}' vs '{color}'"
             )
 
-    def enableChannel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:
+    def enable_channel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:
         if isinstance(channel_or_logger, TraceLogger):
             if qualified_channel is None:
                 raise ValueError("trace channel must not be empty")
-            self.enableChannels(qualified_channel, channel_or_logger.getNamespace())
+            self.enable_channels(qualified_channel, channel_or_logger.namespace)
             return
-        self.enableChannels(channel_or_logger)
+        self.enable_channels(channel_or_logger)
 
-    def enableChannels(self, selectors_csv: str, local_namespace: str = "") -> None:
+    def enable_channels(self, selectors_csv: str, local_namespace: str = "") -> None:
         self._apply_selectors(selectors_csv, local_namespace, enable=True)
 
-    def shouldTraceChannel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> bool:
+    def is_channel_enabled(
+        self,
+        channel_or_logger: str | TraceLogger,
+        qualified_channel: str | None = None,
+    ) -> bool:
         if isinstance(channel_or_logger, TraceLogger):
             if qualified_channel is None:
                 return False
             try:
-                qualified = self._resolve_channel_reference(qualified_channel, channel_or_logger.getNamespace())
+                qualified = self._resolve_channel_reference(qualified_channel, channel_or_logger.namespace)
             except ValueError:
                 return False
             return qualified in self._enabled_channels
@@ -192,26 +196,19 @@ class Logger:
             return False
         return qualified in self._enabled_channels
 
-    def disableChannel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:
+    def disable_channel(self, channel_or_logger: str | TraceLogger, qualified_channel: str | None = None) -> None:
         if isinstance(channel_or_logger, TraceLogger):
             if qualified_channel is None:
                 raise ValueError("trace channel must not be empty")
-            self.disableChannels(qualified_channel, channel_or_logger.getNamespace())
+            self.disable_channels(qualified_channel, channel_or_logger.namespace)
             return
-        self.disableChannels(channel_or_logger)
+        self.disable_channels(channel_or_logger)
 
-    def disableChannels(self, selectors_csv: str, local_namespace: str = "") -> None:
+    def disable_channels(self, selectors_csv: str, local_namespace: str = "") -> None:
         self._apply_selectors(selectors_csv, local_namespace, enable=False)
 
-    def setOutputOptions(self, options: OutputOptions) -> None:
-        self._output_options = OutputOptions(
-            filenames=bool(options.filenames),
-            line_numbers=bool(options.line_numbers),
-            function_names=bool(options.function_names),
-            timestamps=bool(options.timestamps),
-        )
-
-    def getOutputOptions(self) -> OutputOptions:
+    @property
+    def output_options(self) -> OutputOptions:
         return OutputOptions(
             filenames=self._output_options.filenames,
             line_numbers=self._output_options.line_numbers,
@@ -219,14 +216,24 @@ class Logger:
             timestamps=self._output_options.timestamps,
         )
 
-    def getNamespaces(self) -> list[str]:
+    @output_options.setter
+    def output_options(self, options: OutputOptions) -> None:
+        self._output_options = OutputOptions(
+            filenames=bool(options.filenames),
+            line_numbers=bool(options.line_numbers),
+            function_names=bool(options.function_names),
+            timestamps=bool(options.timestamps),
+        )
+
+    @property
+    def namespaces(self) -> list[str]:
         return sorted(self._registered_channels)
 
-    def getChannels(self, trace_namespace: str) -> list[str]:
+    def channels(self, trace_namespace: str) -> list[str]:
         namespace = normalize_namespace_or_throw(trace_namespace)
         return sorted(self._registered_channels.get(namespace, {}))
 
-    def makeInlineParser(self, local_trace_logger: TraceLogger, trace_root: str = "trace") -> Any:
+    def build_inline_parser(self, local_trace_logger: TraceLogger, trace_root: str = "trace") -> Any:
         return _TraceCliBuilder(self, local_trace_logger, trace_root).build()
 
     def _update_output_options(
@@ -237,7 +244,7 @@ class Logger:
         function_names: bool | None = None,
         timestamps: bool | None = None,
     ) -> None:
-        options = self.getOutputOptions()
+        options = self.output_options
         if filenames is not None:
             options.filenames = filenames
         if line_numbers is not None:
@@ -246,7 +253,7 @@ class Logger:
             options.function_names = function_names
         if timestamps is not None:
             options.timestamps = timestamps
-        self.setOutputOptions(options)
+        self.output_options = options
 
     def _apply_selectors(self, selectors_csv: str, local_namespace: str, *, enable: bool) -> None:
         selector_text = str(selectors_csv).strip()
@@ -341,25 +348,25 @@ class Logger:
 class _TraceCliBuilder:
     def __init__(self, logger: Logger, local_trace_logger: TraceLogger, trace_root: str) -> None:
         self._logger = logger
-        self._local_namespace = local_trace_logger.getNamespace()
+        self._local_namespace = local_trace_logger.namespace
         self._trace_root = trace_root
 
     def build(self) -> Any:
         import kcli
 
         parser = kcli.InlineParser(self._trace_root)
-        parser.setRootValueHandler(self._on_root, "<channels>", "Trace selected channels.")
-        parser.setHandler("-examples", self._on_examples, "Show selector examples.")
-        parser.setHandler("-namespaces", self._on_namespaces, "Show initialized trace namespaces.")
-        parser.setHandler("-channels", self._on_channels, "Show initialized trace channels.")
-        parser.setHandler("-colors", self._on_colors, "Show available trace colors.")
-        parser.setHandler("-files", self._on_files, "Include source file and line in trace output.")
-        parser.setHandler("-functions", self._on_functions, "Include function names in trace output.")
-        parser.setHandler("-timestamps", self._on_timestamps, "Include timestamps in trace output.")
+        parser.set_root_value_handler(self._on_root, "<channels>", "Trace selected channels.")
+        parser.set_handler("-examples", self._on_examples, "Show selector examples.")
+        parser.set_handler("-namespaces", self._on_namespaces, "Show initialized trace namespaces.")
+        parser.set_handler("-channels", self._on_channels, "Show initialized trace channels.")
+        parser.set_handler("-colors", self._on_colors, "Show available trace colors.")
+        parser.set_handler("-files", self._on_files, "Include source file and line in trace output.")
+        parser.set_handler("-functions", self._on_functions, "Include function names in trace output.")
+        parser.set_handler("-timestamps", self._on_timestamps, "Include timestamps in trace output.")
         return parser
 
     def _on_root(self, context: Any, value: str) -> None:
-        self._logger.enableChannels(value, self._local_namespace)
+        self._logger.enable_channels(value, self._local_namespace)
 
     def _on_examples(self, context: Any) -> None:
         option_root = f"--{context.root}"
@@ -393,7 +400,7 @@ class _TraceCliBuilder:
         print("")
 
     def _on_namespaces(self, context: Any) -> None:
-        namespaces = self._logger.getNamespaces()
+        namespaces = self._logger.namespaces
         if not namespaces:
             print("No trace namespaces defined.\n")
             return
@@ -404,8 +411,8 @@ class _TraceCliBuilder:
 
     def _on_channels(self, context: Any) -> None:
         printed_any = False
-        for trace_namespace in self._logger.getNamespaces():
-            for channel in self._logger.getChannels(trace_namespace):
+        for trace_namespace in self._logger.namespaces:
+            for channel in self._logger.channels(trace_namespace):
                 if not printed_any:
                     print("\nAvailable trace channels:")
                     printed_any = True

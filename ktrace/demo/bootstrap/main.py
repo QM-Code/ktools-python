@@ -31,13 +31,13 @@ def main(argv: list[str] | None = None) -> int:
 
     logger = ktrace.Logger()
     trace = ktrace.TraceLogger("bootstrap")
-    trace.addChannel("app")
-    logger.addTraceLogger(trace)
-    logger.enableChannel(trace, ".app")
+    trace.add_channel("app")
+    logger.add_trace_logger(trace)
+    logger.enable_channel(trace, ".app")
 
     parser = kcli.Parser()
-    parser.addInlineParser(logger.makeInlineParser(trace))
-    parser.parseOrExit(len(argv), argv)
+    parser.add_inline_parser(logger.build_inline_parser(trace))
+    parser.parse_or_exit(argv)
 
     trace.trace("app", "ktrace python bootstrap passed")
     return 0

@@ -87,8 +87,8 @@ Aliases are only expanded when a token is parsed as an option.
 Examples:
 
 ```python
-parser.addAlias("-v", "--verbose")
-parser.addAlias("-c", "--config-load", ["user-file"])
+parser.add_alias("-v", "--verbose")
+parser.add_alias("-c", "--config-load", ["user-file"])
 ```
 
 Rules:
@@ -121,12 +121,12 @@ Python `kcli` does not treat `--` as an option terminator. It is reported as an 
 
 ## Error Surface
 
-`parseOrExit()`
+`parse_or_exit()`
 
 - prints `[error] [cli] ...` to `stderr`
 - exits with code `2`
 
-`parseOrThrow()`
+`parse()`
 
 - raises `kcli.CliError`
 - preserves the human-facing error message
@@ -136,6 +136,11 @@ Python `kcli` does not treat `--` as an option terminator. It is reported as an 
 
 The Python behavior is covered by:
 
-- `tests/test_kcli.py`
+- `tests/test_aliases.py`
+- `tests/test_errors_and_flow.py`
+- `tests/test_inline_roots.py`
+- `tests/test_normalization.py`
+- `tests/test_values_and_positionals.py`
+- `demo/tests/test_bootstrap_cli.py`
 - `demo/tests/test_core_cli.py`
 - `demo/tests/test_omega_cli.py`

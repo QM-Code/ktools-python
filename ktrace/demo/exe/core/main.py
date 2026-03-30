@@ -36,18 +36,18 @@ def main(argv: list[str] | None = None) -> int:
     logger = ktrace.Logger()
 
     trace = ktrace.TraceLogger("core")
-    trace.addChannel("app", ktrace.Color("BrightCyan"))
-    trace.addChannel("startup", ktrace.Color("BrightYellow"))
+    trace.add_channel("app", ktrace.color("BrightCyan"))
+    trace.add_channel("startup", ktrace.color("BrightYellow"))
 
-    logger.addTraceLogger(trace)
-    logger.addTraceLogger(get_alpha_trace_logger())
+    logger.add_trace_logger(trace)
+    logger.add_trace_logger(get_alpha_trace_logger())
 
-    logger.enableChannel(trace, ".app")
+    logger.enable_channel(trace, ".app")
     trace.trace("app", "core initialized local trace channels")
 
     parser = kcli.Parser()
-    parser.addInlineParser(logger.makeInlineParser(trace))
-    parser.parseOrExit(len(argv), argv)
+    parser.add_inline_parser(logger.build_inline_parser(trace))
+    parser.parse_or_exit(argv)
 
     trace.trace("app", "cli processing enabled, use --trace for options")
     trace.trace("startup", "testing imported tracing, use --trace '*.*' to view imported channels")

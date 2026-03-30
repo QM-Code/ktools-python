@@ -20,8 +20,8 @@ def on_verbose(context: kcli.HandlerContext) -> None:
 
 
 parser = kcli.Parser()
-parser.addAlias("-v", "--verbose")
-parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
+parser.add_alias("-v", "--verbose")
+parser.set_handler("--verbose", on_verbose, "Enable verbose logging.")
 ```
 
 ## Inline Root With Required And Optional Values
@@ -39,11 +39,11 @@ def on_enable(context: kcli.HandlerContext, value: str) -> None:
 
 
 build = kcli.InlineParser("--build")
-build.setHandler("-profile", on_profile, "Set build profile.")
-build.setOptionalValueHandler("-enable", on_enable, "Enable build mode.")
+build.set_handler("-profile", on_profile, "Set build profile.")
+build.set_optional_value_handler("-enable", on_enable, "Enable build mode.")
 
 parser = kcli.Parser()
-parser.addInlineParser(build)
+parser.add_inline_parser(build)
 ```
 
 This enables:
@@ -64,7 +64,7 @@ def on_selector(context: kcli.HandlerContext, value: str) -> None:
 
 
 trace = kcli.InlineParser("--trace")
-trace.setRootValueHandler(on_selector, "<channels>", "Trace selected channels.")
+trace.set_root_value_handler(on_selector, "<channels>", "Trace selected channels.")
 ```
 
 This enables:
@@ -91,8 +91,8 @@ def on_config_load(context: kcli.HandlerContext, value: str) -> None:
 
 
 parser = kcli.Parser()
-parser.addAlias("-c", "--config-load", ["user-file"])
-parser.setHandler("--config-load", on_config_load, "Load config.")
+parser.add_alias("-c", "--config-load", ["user-file"])
+parser.set_handler("--config-load", on_config_load, "Load config.")
 ```
 
 This makes:
@@ -116,7 +116,7 @@ def on_positionals(context: kcli.HandlerContext) -> None:
         use_positional(token)
 
 
-parser.setPositionalHandler(on_positionals)
+parser.set_positional_handler(on_positionals)
 ```
 
 The positional handler receives all remaining non-option tokens after option
@@ -124,11 +124,11 @@ parsing succeeds.
 
 ## Custom Error Handling
 
-If you want your own formatting or exit policy, use `parseOrThrow()`:
+If you want your own formatting or exit policy, use `parse()`:
 
 ```python
 try:
-    parser.parseOrThrow(len(argv), argv)
+    parser.parse(argv)
 except kcli.CliError as exc:
     print(f"custom cli error: {exc}")
     raise SystemExit(2)

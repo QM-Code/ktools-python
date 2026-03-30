@@ -33,15 +33,15 @@ def get_trace_logger() -> ktrace.TraceLogger:
         return _TRACE_LOGGER
 
     trace = ktrace.TraceLogger("alpha")
-    trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
-    trace.addChannel("net.alpha")
-    trace.addChannel("net.beta")
-    trace.addChannel("net.gamma")
-    trace.addChannel("net.gamma.deep")
-    trace.addChannel("cache", ktrace.Color("Gold3"))
-    trace.addChannel("cache.gamma", ktrace.Color("Gold3"))
-    trace.addChannel("cache.delta")
-    trace.addChannel("cache.special", ktrace.Color("Red"))
+    trace.add_channel("net", ktrace.color("DeepSkyBlue1"))
+    trace.add_channel("net.alpha")
+    trace.add_channel("net.beta")
+    trace.add_channel("net.gamma")
+    trace.add_channel("net.gamma.deep")
+    trace.add_channel("cache", ktrace.color("Gold3"))
+    trace.add_channel("cache.gamma", ktrace.color("Gold3"))
+    trace.add_channel("cache.delta")
+    trace.add_channel("cache.special", ktrace.color("Red"))
     _TRACE_LOGGER = trace
     return _TRACE_LOGGER
 

@@ -31,11 +31,11 @@ from ._process_values import join_with_spaces
 
 
 class _ParseSession:
-    def __init__(self, data: _ParserData, argc: int, argv: Sequence[str]) -> None:
+    def __init__(self, data: _ParserData, argv: Sequence[str]) -> None:
         self._data = data
-        self._argc = argc
-        self._tokens = build_parse_tokens(argc, argv)
-        self._consumed = [False] * argc
+        self._argc = len(argv)
+        self._tokens = build_parse_tokens(self._argc, argv)
+        self._consumed = [False] * self._argc
         self._invocations: list[_Invocation] = []
         self._result = _ParseOutcome()
 
@@ -229,11 +229,9 @@ class _ParseSession:
                 )
 
 
-def parse(data: _ParserData, argc: int, argv: Sequence[str] | None) -> None:
-    if argc > 0 and argv is None:
-        throw_cli_error(make_error("", "kcli received invalid argv (argc > 0 but argv is null)"))
-    if argc <= 0 or argv is None:
+def parse(data: _ParserData, argv: Sequence[str] | None) -> None:
+    if argv is None:
         return
-    if len(argv) < argc:
-        throw_cli_error(make_error("", "kcli received invalid argv (argv shorter than argc)"))
-    _ParseSession(data, argc, argv).run()
+    if len(argv) == 0:
+        return
+    _ParseSession(data, argv).run()

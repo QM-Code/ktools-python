@@ -7,9 +7,9 @@ Assume these have already been read:
 
 `ktools-python/kcli/` is the Python implementation of `kcli`.
 
-## What This Repo Owns
+## What This Component Owns
 
-This repo owns the Python API and implementation details for `kcli`, including:
+This component owns the Python API and implementation details for `kcli`, including:
 
 - the public Python package under `src/kcli/`
 - parser and inline-parser behavior
@@ -21,7 +21,7 @@ concerns belong to `ktools-python/`.
 
 ## Local Bootstrap
 
-When familiarizing yourself with this repo, read:
+When familiarizing yourself with this component, read:
 
 - [README.md](README.md)
 - `src/kcli/*`
@@ -31,7 +31,7 @@ When familiarizing yourself with this repo, read:
 ## Build And Test Expectations
 
 - Prefer the shared `kbuild` workflow from the workspace root for builds
-- Use direct `python3 -B -m unittest` runs from this repo root for fast feedback
+- Use direct `python3 -B -m unittest` runs from this component root for fast feedback
 - Treat demos under `demo/` as part of the contract, not disposable examples
 
 Useful commands:
@@ -45,7 +45,7 @@ python3 -B -m unittest discover -s demo/tests
 ## Guidance For Agents
 
 1. Preserve the cross-language `kcli` parsing model unless the operator explicitly wants a Python-specific deviation.
-2. Keep public API changes deliberate; downstream repos such as `ktrace` depend on this package shape.
+2. Keep public API changes deliberate; downstream components such as `ktrace` depend on this package shape.
 3. Prefer aligning behavior with the C++ docs/tests when the Python contract is underspecified.
 4. Surface issues or recommendations when you find them.
 5. After a coherent batch of changes in `ktools-python/kcli/`, return to the

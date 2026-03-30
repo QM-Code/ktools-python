@@ -6,6 +6,10 @@ Keep `ktools-python/` readable, parity-checked, and clearly Pythonic while
 preserving the current public package surfaces and private-module boundaries
 across both `kcli` and `ktrace`.
 
+The `kcli` bootstrap demo test now exists. Do not treat that as open work.
+The next iteration is the broader parity and layout pass that still remains
+across both components.
+
 ## Required Reading
 
 - `../ktools/AGENTS.md`
@@ -32,8 +36,6 @@ across both `kcli` and `ktrace`.
 ## kcli Focus
 
 - Keep the build and staging layer clearly subordinate to the Python package.
-- Add the missing bootstrap demo CLI test so demo coverage spans bootstrap,
-  core, and omega.
 - Re-audit parser parity with C++ for alias preset tokens, inline-root help,
   required values beginning with `-`, double-dash rejection, error formatting,
   and validation-before-handler execution.
@@ -68,6 +70,6 @@ across both `kcli` and `ktrace`.
 
 ## Done When
 
-- Demo coverage includes the bootstrap path.
+- Demo coverage remains explicit across bootstrap, core, and omega.
 - Public and private module boundaries are easy to follow.
 - `kcli` and `ktrace` are both easy to compare with the C++ contract.

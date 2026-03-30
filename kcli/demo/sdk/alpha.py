@@ -48,6 +48,6 @@ def _handle_enable(context: kcli.HandlerContext, value: str) -> None:
 
 def get_inline_parser() -> kcli.InlineParser:
     parser = kcli.InlineParser("--alpha")
-    parser.setHandler("-message", _handle_message, "Set alpha message label.")
-    parser.setOptionalValueHandler("-enable", _handle_enable, "Enable alpha processing.")
+    parser.set_handler("-message", _handle_message, "Set alpha message label.")
+    parser.set_optional_value_handler("-enable", _handle_enable, "Enable alpha processing.")
     return parser

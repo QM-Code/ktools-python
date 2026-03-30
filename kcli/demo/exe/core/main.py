@@ -60,15 +60,15 @@ def main(argv: list[str] | None = None) -> int:
     exe_name = _executable_name(argv[0] if argv else None)
 
     parser = kcli.Parser()
-    parser.addInlineParser(get_inline_parser())
+    parser.add_inline_parser(get_inline_parser())
 
-    parser.addAlias("-v", "--verbose")
-    parser.addAlias("-out", "--output")
-    parser.addAlias("-a", "--alpha-enable")
+    parser.add_alias("-v", "--verbose")
+    parser.add_alias("-out", "--output")
+    parser.add_alias("-a", "--alpha-enable")
 
-    parser.setHandler("--verbose", _handle_verbose, "Enable verbose app logging.")
-    parser.setHandler("--output", _handle_output, "Set app output target.")
-    parser.parseOrExit(len(argv), argv)
+    parser.set_handler("--verbose", _handle_verbose, "Enable verbose app logging.")
+    parser.set_handler("--output", _handle_output, "Set app output target.")
+    parser.parse_or_exit(argv)
 
     print("\nKCLI python demo core import/integration check passed\n")
     print("Usage:")

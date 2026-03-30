@@ -25,9 +25,9 @@ If `kbuild` is already on your `PATH`, the equivalent command is:
 kbuild --batch kcli ktrace --build-latest
 ```
 
-Use the relevant child repo when testing a specific Python implementation.
+Use the relevant child component when testing a specific Python implementation.
 
-Typical child-repo test commands:
+Typical child-component test commands:
 
 ```bash
 cd kcli
@@ -41,7 +41,7 @@ python3 -B -m unittest discover -s demo/tests
 
 ## Where To Go Next
 
-For concrete Python API and implementation details, use the docs in the relevant child repo.
+For concrete Python API and implementation details, use the docs in the relevant child component.
 
 Current implementation:
 

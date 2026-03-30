@@ -48,6 +48,6 @@ def _handle_tag(context: kcli.HandlerContext, value: str) -> None:
 
 def get_inline_parser() -> kcli.InlineParser:
     parser = kcli.InlineParser("--gamma")
-    parser.setOptionalValueHandler("-strict", _handle_strict, "Enable strict gamma mode.")
-    parser.setHandler("-tag", _handle_tag, "Set a gamma tag label.")
+    parser.set_optional_value_handler("-strict", _handle_strict, "Enable strict gamma mode.")
+    parser.set_handler("-tag", _handle_tag, "Set a gamma tag label.")
     return parser

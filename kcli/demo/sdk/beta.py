@@ -57,6 +57,6 @@ def _handle_workers(context: kcli.HandlerContext, value: str) -> None:
 
 def get_inline_parser() -> kcli.InlineParser:
     parser = kcli.InlineParser("--beta")
-    parser.setHandler("-profile", _handle_profile, "Select beta runtime profile.")
-    parser.setHandler("-workers", _handle_workers, "Set beta worker count.")
+    parser.set_handler("-profile", _handle_profile, "Select beta runtime profile.")
+    parser.set_handler("-workers", _handle_workers, "Set beta worker count.")
     return parser

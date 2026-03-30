@@ -7,7 +7,7 @@ It follows the same high-level model as the C++ implementation:
 
 - library-facing `TraceLogger` sources with named channels
 - executable-facing `Logger` runtime state for selector enablement and output
-- `kcli` integration through `logger.makeInlineParser(...)`
+- `kcli` integration through `logger.build_inline_parser(...)`
 - developer/operator output rather than end-user UI text
 
 ## Documentation
@@ -43,7 +43,7 @@ python3 -B -m unittest discover -s tests
 python3 -B -m unittest discover -s demo/tests
 ```
 
-Demo entrypoints from this repo root:
+Demo entrypoints from this component root:
 
 ```bash
 python3 -B demo/bootstrap/main.py --trace '.*'
@@ -70,8 +70,8 @@ python3 -B demo/exe/omega/main.py --trace-colors
 import ktrace
 
 trace = ktrace.TraceLogger("alpha")
-trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
-trace.addChannel("cache", ktrace.Color("Gold3"))
+trace.add_channel("net", ktrace.color("DeepSkyBlue1"))
+trace.add_channel("cache", ktrace.color("Gold3"))
 ```
 
 SDK-style Python modules will usually expose one shared trace source through a
@@ -87,7 +87,7 @@ def get_trace_logger() -> ktrace.TraceLogger:
         return _TRACE_LOGGER
 
     trace = ktrace.TraceLogger("alpha")
-    trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
+    trace.add_channel("net", ktrace.color("DeepSkyBlue1"))
     _TRACE_LOGGER = trace
     return _TRACE_LOGGER
 ```
@@ -96,8 +96,8 @@ def get_trace_logger() -> ktrace.TraceLogger:
 
 ```python
 logger = ktrace.Logger()
-logger.addTraceLogger(trace)
-logger.enableChannels("alpha.*")
+logger.add_trace_logger(trace)
+logger.enable_channels("alpha.*")
 ```
 
 ## Behavior Highlights
@@ -111,7 +111,7 @@ logger.enableChannels("alpha.*")
 - unmatched selectors produce warning output instead of raising
 - conflicting explicit channel-color merges are rejected when trace sources are attached to one `Logger`
 - invalid runtime channel queries return `False` rather than raising
-- `makeInlineParser()` exposes `--trace`, `--trace-examples`, `--trace-namespaces`, `--trace-channels`, `--trace-colors`, `--trace-files`, `--trace-functions`, and `--trace-timestamps`
+- `build_inline_parser()` exposes `--trace`, `--trace-examples`, `--trace-namespaces`, `--trace-channels`, `--trace-colors`, `--trace-files`, `--trace-functions`, and `--trace-timestamps`
 
 ## Demo Layout
 
@@ -125,4 +125,4 @@ The demos are covered by subprocess-based CLI tests under `demo/tests/`.
 ## Coding Agents
 
 If you are using a coding agent, read the workspace-level agent instructions
-first and then follow the local repo layout.
+first and then follow the local component layout.

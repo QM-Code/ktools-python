@@ -40,7 +40,7 @@ Additional rules:
 
 ## Runtime Channel Queries
 
-`Logger.shouldTraceChannel(...)` and `TraceLogger.shouldTraceChannel(...)` return
+`Logger.is_channel_enabled(...)` and `TraceLogger.is_channel_enabled(...)` return
 `False` for:
 
 - unattached trace sources

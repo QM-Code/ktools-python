@@ -9,7 +9,7 @@ This page summarizes the Python public API in [`src/ktrace`](../src/ktrace).
 | `ktrace.TraceLogger` | Library-facing source object that owns a trace namespace and its declared channels. |
 | `ktrace.Logger` | Executable-facing runtime that owns channel registration, selector enablement, and formatted output. |
 | `ktrace.OutputOptions` | Output-format toggles for filenames, line numbers, function names, and timestamps. |
-| `ktrace.Color()` | Normalizes a named trace color token. |
+| `ktrace.color()` | Normalizes a named trace color token. |
 
 ## OutputOptions
 
@@ -36,9 +36,9 @@ The namespace must be a valid selector identifier.
 ### Channel Registration
 
 ```python
-trace.addChannel("net")
-trace.addChannel("cache", ktrace.Color("Gold3"))
-trace.addChannel("deep.branch.leaf")
+trace.add_channel("net")
+trace.add_channel("cache", ktrace.color("Gold3"))
+trace.add_channel("deep.branch.leaf")
 ```
 
 Channels must use dotted identifier paths.
@@ -46,21 +46,21 @@ Channels must use dotted identifier paths.
 ### Namespace And Enablement
 
 ```python
-trace.getNamespace()
-trace.shouldTraceChannel("net")
+trace.namespace
+trace.is_channel_enabled("net")
 ```
 
-`shouldTraceChannel()` returns `False` until the trace logger is attached to a
+`is_channel_enabled()` returns `False` until the trace logger is attached to a
 `ktrace.Logger`.
 
 ### Trace Output
 
 ```python
 trace.trace("net", "connected to {}", host)
-trace.traceChanged("state", state_key, "state changed to {}", state)
+trace.trace_changed("state", state_key, "state changed to {}", state)
 ```
 
-`traceChanged()` suppresses repeated output only when the same call site emits
+`trace_changed()` suppresses repeated output only when the same call site emits
 the same key repeatedly.
 
 ### Operational Logs
@@ -79,7 +79,7 @@ These logs are not gated by channel selectors.
 
 ```python
 logger = ktrace.Logger()
-logger.addTraceLogger(app_trace)
+logger.add_trace_logger(app_trace)
 ```
 
 A `TraceLogger` may only be attached to one `Logger`.
@@ -97,7 +97,7 @@ def get_trace_logger() -> ktrace.TraceLogger:
         return _TRACE_LOGGER
 
     trace = ktrace.TraceLogger("alpha")
-    trace.addChannel("net", ktrace.Color("DeepSkyBlue1"))
+    trace.add_channel("net", ktrace.color("DeepSkyBlue1"))
     _TRACE_LOGGER = trace
     return _TRACE_LOGGER
 ```
@@ -105,10 +105,10 @@ def get_trace_logger() -> ktrace.TraceLogger:
 ### Channel Enablement
 
 ```python
-logger.enableChannel(app_trace, ".app")
-logger.enableChannels("*.{net,io}")
-logger.disableChannel(app_trace, ".app")
-logger.disableChannels("alpha.cache")
+logger.enable_channel(app_trace, ".app")
+logger.enable_channels("*.{net,io}")
+logger.disable_channel(app_trace, ".app")
+logger.disable_channels("alpha.cache")
 ```
 
 Selector forms supported by the current Python implementation include:
@@ -122,23 +122,23 @@ Additional rules:
 
 - bare `*` is invalid; use a qualified selector such as `.*` or `*.*`
 - leading-dot selectors require a local namespace context
-- `enableChannels(...)` and `disableChannels(...)` accept CSV selector lists
+- `enable_channels(...)` and `disable_channels(...)` accept CSV selector lists
 - unmatched selectors produce a warning log rather than raising
 
 ### Querying State
 
 ```python
-logger.shouldTraceChannel(app_trace, ".app")
-logger.getNamespaces()
-logger.getChannels("alpha")
+logger.is_channel_enabled(app_trace, ".app")
+logger.namespaces
+logger.channels("alpha")
 ```
 
 ### Output Formatting
 
 ```python
-options = logger.getOutputOptions()
+options = logger.output_options
 options.timestamps = True
-logger.setOutputOptions(options)
+logger.output_options = options
 ```
 
 When filename output is enabled:
@@ -149,10 +149,10 @@ When filename output is enabled:
 ### CLI Integration
 
 ```python
-parser.addInlineParser(logger.makeInlineParser(app_trace))
+parser.add_inline_parser(logger.build_inline_parser(app_trace))
 ```
 
-`makeInlineParser()` exposes:
+`build_inline_parser()` exposes:
 
 - `--trace <channels>`
 - `--trace-examples`

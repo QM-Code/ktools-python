@@ -11,7 +11,7 @@ class ErrorAndFlowTests(unittest.TestCase):
     def test_parser_empty_parse_succeeds(self) -> None:
         argv = ["prog"]
         parser = kcli.Parser()
-        parser.parseOrExit(len(argv), argv)
+        parser.parse_or_exit(argv)
         self.assertEqual(argv, ["prog"])
 
     def test_end_user_known_options_with_unknown_option_error(self) -> None:
@@ -30,17 +30,17 @@ class ErrorAndFlowTests(unittest.TestCase):
             nonlocal output
             output = value
 
-        parser.setHandler("verbose", on_verbose, "Enable verbose logging.")
-        parser.setHandler("output", on_output, "Set output target.")
-        parser.setPositionalHandler(lambda context: positionals.extend(context.value_tokens))
+        parser.set_handler("verbose", on_verbose, "Enable verbose logging.")
+        parser.set_handler("output", on_output, "Set output target.")
+        parser.set_positional_handler(lambda context: positionals.extend(context.value_tokens))
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
         self.assertFalse(verbose)
         self.assertEqual(output, "")
         self.assertEqual(positionals, [])
-        self.assertEqual(raised.exception.option(), "--bogus")
+        self.assertEqual(raised.exception.option, "--bogus")
         self.assertIn("unknown option --bogus", str(raised.exception))
         self.assertEqual(argv, ["prog", "--verbose", "pos1", "--output", "stdout", "--bogus", "pos2"])
 
@@ -50,15 +50,15 @@ class ErrorAndFlowTests(unittest.TestCase):
         calls = 0
 
         parser = kcli.Parser()
-        parser.addAlias("-v", "--verbose")
+        parser.add_alias("-v", "--verbose")
 
         def on_verbose(context: kcli.HandlerContext) -> None:
             nonlocal calls
             calls += 1
 
-        parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
-        parser.parseOrExit(len(first), first)
-        parser.parseOrExit(len(second), second)
+        parser.set_handler("--verbose", on_verbose, "Enable verbose logging.")
+        parser.parse_or_exit(first)
+        parser.parse_or_exit(second)
 
         self.assertEqual(calls, 2)
         self.assertEqual(first, ["prog", "-v"])
@@ -69,18 +69,18 @@ class ErrorAndFlowTests(unittest.TestCase):
         parser = kcli.Parser()
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--")
+        self.assertEqual(raised.exception.option, "--")
 
     def test_unknown_option_throws_cli_error(self) -> None:
         argv = ["prog", "--bogus"]
         parser = kcli.Parser()
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--bogus")
+        self.assertEqual(raised.exception.option, "--bogus")
         self.assertIn("unknown option --bogus", str(raised.exception))
 
     def test_option_handler_exception_throws_cli_error(self) -> None:
@@ -90,24 +90,24 @@ class ErrorAndFlowTests(unittest.TestCase):
         def on_verbose(context: kcli.HandlerContext) -> None:
             raise RuntimeError("option boom")
 
-        parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
+        parser.set_handler("--verbose", on_verbose, "Enable verbose logging.")
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--verbose")
+        self.assertEqual(raised.exception.option, "--verbose")
         self.assertIn("option boom", str(raised.exception))
         self.assertIn("--verbose", str(raised.exception))
 
     def test_positional_handler_exception_throws_cli_error(self) -> None:
         argv = ["prog", "tail"]
         parser = kcli.Parser()
-        parser.setPositionalHandler(lambda context: (_ for _ in ()).throw(RuntimeError("positional boom")))
+        parser.set_positional_handler(lambda context: (_ for _ in ()).throw(RuntimeError("positional boom")))
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "")
+        self.assertEqual(raised.exception.option, "")
         self.assertIn("positional boom", str(raised.exception))
 
     def test_parse_or_exit_reports_and_exits(self) -> None:
@@ -117,7 +117,7 @@ class ErrorAndFlowTests(unittest.TestCase):
 
         with contextlib.redirect_stderr(stderr):
             with self.assertRaises(SystemExit) as raised:
-                parser.parseOrExit(len(argv), argv)
+                parser.parse_or_exit(argv)
 
         self.assertEqual(raised.exception.code, 2)
         self.assertIn("[error] [cli] unknown option --bogus", stderr.getvalue())

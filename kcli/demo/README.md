@@ -18,7 +18,7 @@ Demo pages:
 - [exe/core/README.md](exe/core/README.md)
 - [exe/omega/README.md](exe/omega/README.md)
 
-Run examples from the repo root:
+Run examples from the component root:
 
 ```bash
 python3 -B demo/bootstrap/main.py --verbose

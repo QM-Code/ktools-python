@@ -12,13 +12,13 @@ class InlineRootTests(unittest.TestCase):
         argv = ["prog", "--build"]
         parser = kcli.Parser()
         build = kcli.InlineParser("build")
-        build.setHandler("-flag", lambda context: None, "Enable build flag.")
-        build.setHandler("-value", lambda context, value: None, "Set build value.")
-        parser.addInlineParser(build)
+        build.set_handler("-flag", lambda context: None, "Enable build flag.")
+        build.set_handler("-value", lambda context, value: None, "Set build value.")
+        parser.add_inline_parser(build)
 
         stream = io.StringIO()
         with contextlib.redirect_stdout(stream):
-            parser.parseOrExit(len(argv), argv)
+            parser.parse_or_exit(argv)
         output = stream.getvalue()
 
         self.assertIn("Available --build-* options:", output)
@@ -29,13 +29,13 @@ class InlineRootTests(unittest.TestCase):
         argv = ["prog", "--build"]
         parser = kcli.Parser()
         build = kcli.InlineParser("build")
-        build.setRootValueHandler(lambda context, value: None, "<selector>", "Select build targets.")
-        build.setHandler("-flag", lambda context: None, "Enable build flag.")
-        parser.addInlineParser(build)
+        build.set_root_value_handler(lambda context, value: None, "<selector>", "Select build targets.")
+        build.set_handler("-flag", lambda context: None, "Enable build flag.")
+        parser.add_inline_parser(build)
 
         stream = io.StringIO()
         with contextlib.redirect_stdout(stream):
-            parser.parseOrExit(len(argv), argv)
+            parser.parse_or_exit(argv)
         output = stream.getvalue()
 
         self.assertIn("--build <selector>", output)
@@ -56,10 +56,10 @@ class InlineRootTests(unittest.TestCase):
             received_tokens = list(context.value_tokens)
             received_option = context.option
 
-        build.setRootValueHandler(on_root)
-        parser.addInlineParser(build)
+        build.set_root_value_handler(on_root)
+        parser.add_inline_parser(build)
 
-        parser.parseOrExit(len(argv), argv)
+        parser.parse_or_exit(argv)
         self.assertEqual(received_value, "fast mode")
         self.assertEqual(received_tokens, ["fast", "mode"])
         self.assertEqual(received_option, "--build")
@@ -67,23 +67,23 @@ class InlineRootTests(unittest.TestCase):
     def test_inline_missing_root_value_handler_errors(self) -> None:
         argv = ["prog", "--build", "fast"]
         parser = kcli.Parser()
-        parser.addInlineParser(kcli.InlineParser("--build"))
+        parser.add_inline_parser(kcli.InlineParser("--build"))
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--build")
+        self.assertEqual(raised.exception.option, "--build")
         self.assertIn("unknown value for option '--build'", str(raised.exception))
 
     def test_unknown_inline_option_errors(self) -> None:
         argv = ["prog", "--build-unknown"]
         parser = kcli.Parser()
-        parser.addInlineParser(kcli.InlineParser("--build"))
+        parser.add_inline_parser(kcli.InlineParser("--build"))
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--build-unknown")
+        self.assertEqual(raised.exception.option, "--build-unknown")
         self.assertIn("unknown option --build-unknown", str(raised.exception))
 
     def test_inline_parser_root_override_applies(self) -> None:
@@ -97,10 +97,10 @@ class InlineRootTests(unittest.TestCase):
             nonlocal tag
             tag = value
 
-        gamma.setHandler("-tag", on_tag, "Set gamma tag.")
-        gamma.setRoot("--newgamma")
-        parser.addInlineParser(gamma)
-        parser.parseOrExit(len(argv), argv)
+        gamma.set_handler("-tag", on_tag, "Set gamma tag.")
+        gamma.set_root("--newgamma")
+        parser.add_inline_parser(gamma)
+        parser.parse_or_exit(argv)
 
         self.assertEqual(tag, "prod")
 

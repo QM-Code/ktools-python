@@ -19,16 +19,16 @@ import ktrace
 logger = ktrace.Logger()
 
 app_trace = ktrace.TraceLogger("core")
-app_trace.addChannel("app", ktrace.Color("BrightCyan"))
-app_trace.addChannel("startup", ktrace.Color("BrightYellow"))
+app_trace.add_channel("app", ktrace.color("BrightCyan"))
+app_trace.add_channel("startup", ktrace.color("BrightYellow"))
 
-logger.addTraceLogger(app_trace)
+logger.add_trace_logger(app_trace)
 
 parser = kcli.Parser()
-parser.addInlineParser(logger.makeInlineParser(app_trace))
+parser.add_inline_parser(logger.build_inline_parser(app_trace))
 
 argv = ["tool", "--trace", ".app"]
-parser.parseOrExit(len(argv), argv)
+parser.parse_or_exit(argv)
 
 app_trace.trace("app", "cli processing enabled")
 app_trace.info("service starting")
@@ -44,7 +44,7 @@ app_trace.info("service starting")
 - invalid runtime channel queries return `False`
 - output formatting can include timestamps, filenames, line numbers, and
   function names
-- `makeInlineParser()` exposes the `--trace*` CLI surface through `kcli`
+- `build_inline_parser()` exposes the `--trace*` CLI surface through `kcli`
 
 For the Python public surface, see [api.md](api.md). For the concrete selector,
 merge, and formatting rules, see [behavior.md](behavior.md).

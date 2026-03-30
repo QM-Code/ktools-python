@@ -8,7 +8,7 @@
     "auth": "git@github.com:QM-Code/ktools-python.git"
   },
   "batch": {
-    "repos": [
+    "targets": [
       "kcli",
       "ktrace"
     ]

@@ -12,7 +12,7 @@ The Python implementation follows the same core model as the C++ SDK:
 - `Parser` for top-level options, aliases, and positionals
 - `InlineParser` for one inline root such as `--build`
 - full-parse validation before any registered handler executes
-- `parseOrExit()` for executable-style handling and `parseOrThrow()` for tests and custom error handling
+- `parse_or_exit()` for executable-style handling and `parse()` for tests and custom error handling
 
 ## Documentation
 
@@ -30,7 +30,7 @@ Build from the `ktools-python/` workspace root with the shared build tool:
 python3 ../kbuild/kbuild.py --batch kcli --build-latest
 ```
 
-The CMake files in this repo exist only to let `kbuild` stage the Python
+The CMake files in this component exist only to let `kbuild` stage the Python
 package and demo entrypoints into the shared SDK/demo layout. Parser behavior
 lives in `src/`, `tests/`, and `demo/`; keep the CMake layer thin.
 
@@ -40,14 +40,14 @@ If `kbuild` is already on your `PATH`, the equivalent command is:
 kbuild --batch kcli --build-latest
 ```
 
-From this repo root, run the Python tests directly:
+From this component root, run the Python tests directly:
 
 ```bash
 python3 -B -m unittest discover -s tests
 python3 -B -m unittest discover -s demo/tests
 ```
 
-Demo entrypoints from this repo root:
+Demo entrypoints from this component root:
 
 ```bash
 python3 -B demo/bootstrap/main.py --verbose
@@ -58,8 +58,8 @@ python3 -B demo/exe/omega/main.py --build
 
 ## Behavior Highlights
 
-- `parseOrExit()` reports `[error] [cli] ...` to `stderr` and exits with code `2`
-- `parseOrThrow()` raises `kcli.CliError`
+- `parse_or_exit()` reports `[error] [cli] ...` to `stderr` and exits with code `2`
+- `parse()` raises `kcli.CliError`
 - bare inline roots such as `--alpha` or `--build` print inline help by default
 - root value handlers support bare-root values such as `--trace '.*'`
 - required-value handlers may consume a first value token that begins with `-`
@@ -82,5 +82,5 @@ The demos are part of the expected behavior contract and have subprocess-based c
 
 ## Coding Agents
 
-Read the workspace instructions first, then use the repo-local docs and tests as
+Read the workspace instructions first, then use the component-local docs and tests as
 the implementation contract.

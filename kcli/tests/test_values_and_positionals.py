@@ -21,9 +21,9 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             received_value = value
             received_tokens = list(context.value_tokens)
 
-        build.setOptionalValueHandler("-enable", on_enable, "Enable build mode.")
-        parser.addInlineParser(build)
-        parser.parseOrExit(len(argv), argv)
+        build.set_optional_value_handler("-enable", on_enable, "Enable build mode.")
+        parser.add_inline_parser(build)
+        parser.parse_or_exit(argv)
 
         self.assertTrue(called)
         self.assertEqual(received_value, "")
@@ -42,9 +42,9 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             received_value = value
             received_tokens = list(context.value_tokens)
 
-        build.setOptionalValueHandler("-enable", on_enable, "Enable build mode.")
-        parser.addInlineParser(build)
-        parser.parseOrExit(len(argv), argv)
+        build.set_optional_value_handler("-enable", on_enable, "Enable build mode.")
+        parser.add_inline_parser(build)
+        parser.parse_or_exit(argv)
 
         self.assertEqual(received_value, "")
         self.assertEqual(received_tokens, [""])
@@ -61,10 +61,10 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             nonlocal called
             called = True
 
-        build.setHandler("-meta", on_meta, "Record metadata.")
-        parser.addInlineParser(build)
-        parser.setPositionalHandler(lambda context: positionals.extend(context.value_tokens))
-        parser.parseOrExit(len(argv), argv)
+        build.set_handler("-meta", on_meta, "Record metadata.")
+        parser.add_inline_parser(build)
+        parser.set_positional_handler(lambda context: positionals.extend(context.value_tokens))
+        parser.parse_or_exit(argv)
 
         self.assertTrue(called)
         self.assertEqual(positionals, ["data"])
@@ -73,13 +73,13 @@ class ValuesAndPositionalsTests(unittest.TestCase):
         argv = ["prog", "--build-value"]
         parser = kcli.Parser()
         build = kcli.InlineParser("build")
-        build.setHandler("-value", lambda context, value: None, "Set build value.")
-        parser.addInlineParser(build)
+        build.set_handler("-value", lambda context, value: None, "Set build value.")
+        parser.add_inline_parser(build)
 
         with self.assertRaises(kcli.CliError) as raised:
-            parser.parseOrThrow(len(argv), argv)
+            parser.parse(argv)
 
-        self.assertEqual(raised.exception.option(), "--build-value")
+        self.assertEqual(raised.exception.option, "--build-value")
         self.assertIn("requires a value", str(raised.exception))
 
     def test_required_value_handler_accepts_dash_prefixed_first_value(self) -> None:
@@ -91,10 +91,10 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             value = raw_value
 
         build = kcli.InlineParser("build")
-        build.setHandler("-value", on_value, "Set build value.")
+        build.set_handler("-value", on_value, "Set build value.")
         parser = kcli.Parser()
-        parser.addInlineParser(build)
-        parser.parseOrExit(len(argv), argv)
+        parser.add_inline_parser(build)
+        parser.parse_or_exit(argv)
 
         self.assertEqual(value, "-debug")
 
@@ -110,8 +110,8 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             received_value = value
             received_tokens = list(context.value_tokens)
 
-        parser.setHandler("--name", on_name, "Set the display name.")
-        parser.parseOrExit(len(argv), argv)
+        parser.set_handler("--name", on_name, "Set the display name.")
+        parser.parse_or_exit(argv)
 
         self.assertEqual(received_value, " Joe ")
         self.assertEqual(received_tokens, [" Joe "])
@@ -128,8 +128,8 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             received_value = value
             received_tokens = list(context.value_tokens)
 
-        parser.setHandler("--name", on_name, "Set the display name.")
-        parser.parseOrExit(len(argv), argv)
+        parser.set_handler("--name", on_name, "Set the display name.")
+        parser.parse_or_exit(argv)
 
         self.assertEqual(received_value, "")
         self.assertEqual(received_tokens, [""])
@@ -139,8 +139,8 @@ class ValuesAndPositionalsTests(unittest.TestCase):
         positionals: list[str] = []
 
         parser = kcli.Parser()
-        parser.setPositionalHandler(lambda context: positionals.extend(context.value_tokens))
-        parser.parseOrExit(len(argv), argv)
+        parser.set_positional_handler(lambda context: positionals.extend(context.value_tokens))
+        parser.parse_or_exit(argv)
 
         self.assertEqual(positionals, ["", "tail"])
 
@@ -161,11 +161,11 @@ class ValuesAndPositionalsTests(unittest.TestCase):
             nonlocal output
             output = value
 
-        alpha.setHandler("-message", on_message, "Set alpha message.")
-        parser.addInlineParser(alpha)
-        parser.setHandler("--output", on_output, "Set output target.")
-        parser.setPositionalHandler(lambda context: positionals.extend(context.value_tokens))
-        parser.parseOrExit(len(argv), argv)
+        alpha.set_handler("-message", on_message, "Set alpha message.")
+        parser.add_inline_parser(alpha)
+        parser.set_handler("--output", on_output, "Set output target.")
+        parser.set_positional_handler(lambda context: positionals.extend(context.value_tokens))
+        parser.parse_or_exit(argv)
 
         self.assertEqual(alpha_message, "hello")
         self.assertEqual(output, "stdout")

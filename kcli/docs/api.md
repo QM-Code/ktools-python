@@ -9,7 +9,7 @@ This page summarizes the Python public API in [`src/kcli`](../src/kcli).
 | `kcli.Parser` | Owns top-level handlers, aliases, positional handling, and inline parser registration. |
 | `kcli.InlineParser` | Defines an inline root such as `--build` plus its `--build-*` handlers. |
 | `kcli.HandlerContext` | Metadata passed to flag, value, and positional handlers. |
-| `kcli.CliError` | Raised by `parseOrThrow()` for invalid CLI input and handler failures. |
+| `kcli.CliError` | Raised by `parse()` for invalid CLI input and handler failures. |
 
 ## HandlerContext
 
@@ -24,13 +24,13 @@ This page summarizes the Python public API in [`src/kcli`](../src/kcli).
 
 ## CliError
 
-`CliError(option, message)` is raised by `parseOrThrow()` when:
+`CliError(option, message)` is raised by `parse()` when:
 
 - the command line is invalid
 - a registered option handler raises
 - the positional handler raises
 
-`option()` returns the option token associated with the failure when one is
+`.option` returns the option token associated with the failure when one is
 available.
 
 ## InlineParser
@@ -47,7 +47,7 @@ Both forms are accepted.
 ### Root Control
 
 ```python
-build.setRoot("--newbuild")
+build.set_root("--newbuild")
 ```
 
 This changes the inline root after construction.
@@ -55,8 +55,8 @@ This changes the inline root after construction.
 ### Root Value Handler
 
 ```python
-build.setRootValueHandler(on_root)
-build.setRootValueHandler(on_root, "<selector>", "Select build targets.")
+build.set_root_value_handler(on_root)
+build.set_root_value_handler(on_root, "<selector>", "Select build targets.")
 ```
 
 Use this when the bare root should accept a value instead of only printing help.
@@ -64,9 +64,9 @@ Use this when the bare root should accept a value instead of only printing help.
 ### Inline Handlers
 
 ```python
-build.setHandler("-flag", on_flag, "Enable build flag.")
-build.setHandler("-profile", on_profile, "Set build profile.")
-build.setOptionalValueHandler("-enable", on_enable, "Enable build mode.")
+build.set_handler("-flag", on_flag, "Enable build flag.")
+build.set_handler("-profile", on_profile, "Set build profile.")
+build.set_optional_value_handler("-enable", on_enable, "Enable build mode.")
 ```
 
 Inline options can be written in either form:
@@ -79,9 +79,9 @@ Inline options can be written in either form:
 ### Top-Level Handlers
 
 ```python
-parser.setHandler("--verbose", on_verbose, "Enable verbose logging.")
-parser.setHandler("--output", on_output, "Set output target.")
-parser.setOptionalValueHandler("--color", on_color, "Set or auto-detect color output.")
+parser.set_handler("--verbose", on_verbose, "Enable verbose logging.")
+parser.set_handler("--output", on_output, "Set output target.")
+parser.set_optional_value_handler("--color", on_color, "Set or auto-detect color output.")
 ```
 
 Top-level options may be provided as either:
@@ -89,7 +89,7 @@ Top-level options may be provided as either:
 - `"verbose"`
 - `"--verbose"`
 
-`setHandler(...)` inspects the callable arity:
+`set_handler(...)` inspects the callable arity:
 
 - one-argument handlers are treated as flags
 - two-argument handlers are treated as required-value handlers
@@ -97,8 +97,8 @@ Top-level options may be provided as either:
 ### Aliases
 
 ```python
-parser.addAlias("-v", "--verbose")
-parser.addAlias("-c", "--config-load", ["user-file"])
+parser.add_alias("-v", "--verbose")
+parser.add_alias("-c", "--config-load", ["user-file"])
 ```
 
 Rules:
@@ -110,7 +110,7 @@ Rules:
 ### Positional Handler
 
 ```python
-parser.setPositionalHandler(on_positionals)
+parser.set_positional_handler(on_positionals)
 ```
 
 The positional handler receives remaining non-option tokens in
@@ -119,7 +119,7 @@ The positional handler receives remaining non-option tokens in
 ### Inline Parser Registration
 
 ```python
-parser.addInlineParser(build)
+parser.add_inline_parser(build)
 ```
 
 Duplicate inline roots are rejected.
@@ -127,17 +127,17 @@ Duplicate inline roots are rejected.
 ### Parse Entry Points
 
 ```python
-parser.parseOrExit(len(argv), argv)
-parser.parseOrThrow(len(argv), argv)
+parser.parse_or_exit(argv)
+parser.parse(argv)
 ```
 
-`parseOrExit()`
+`parse_or_exit()`
 
 - preserves the caller's `argv`
 - prints errors to `stderr`
 - exits with code `2`
 
-`parseOrThrow()`
+`parse()`
 
 - preserves the caller's `argv`
 - raises `kcli.CliError`

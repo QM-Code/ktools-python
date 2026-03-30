@@ -46,9 +46,9 @@ def _handle_verbose(context: kcli.HandlerContext) -> None:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv if argv is None else argv)
     parser = kcli.Parser()
-    parser.addAlias("-v", "--verbose")
-    parser.setHandler("--verbose", _handle_verbose, "Enable verbose demo logging.")
-    parser.parseOrExit(len(argv), argv)
+    parser.add_alias("-v", "--verbose")
+    parser.set_handler("--verbose", _handle_verbose, "Enable verbose demo logging.")
+    parser.parse_or_exit(argv)
     print("\nKCLI python bootstrap import/parse check passed\n")
     return 0
 

@@ -19,6 +19,7 @@ class CliError(RuntimeError):
         super().__init__(message if message else "kcli parse failed")
         self._option = option
 
+    @property
     def option(self) -> str:
         return self._option
 

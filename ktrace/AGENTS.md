@@ -7,9 +7,9 @@ Assume these have already been read:
 
 `ktools-python/ktrace/` is the Python implementation of `ktrace`.
 
-## What This Repo Owns
+## What This Component Owns
 
-This repo owns the Python API and implementation details for `ktrace`, including:
+This component owns the Python API and implementation details for `ktrace`, including:
 
 - the public Python package under `src/ktrace/`
 - selector, formatting, and logging behavior
@@ -21,7 +21,7 @@ concerns belong to `ktools-python/`.
 
 ## Local Bootstrap
 
-When familiarizing yourself with this repo, read:
+When familiarizing yourself with this component, read:
 
 - [README.md](README.md)
 - `src/ktrace/*`
@@ -31,7 +31,7 @@ When familiarizing yourself with this repo, read:
 ## Build And Test Expectations
 
 - Prefer the shared `kbuild` workflow from the workspace root for builds
-- Use direct `python3 -B -m unittest` runs from this repo root for fast feedback
+- Use direct `python3 -B -m unittest` runs from this component root for fast feedback
 - Treat demos under `demo/` as part of the contract, not disposable examples
 
 Useful commands:
